@@ -1,7 +1,7 @@
 // オフラインでも起動できるよう、アプリ本体だけをキャッシュする（写真は IndexedDB にあり、ここでは扱わない）
 // ファイルを更新して公開するときは VERSION を上げる
 
-const VERSION = 'momo-bday-v3';
+const VERSION = 'momo-bday-v4';
 const ASSETS = [
   './',
   'index.html',
@@ -22,7 +22,11 @@ const ASSETS = [
   'js/audio/voice.js',
   'js/audio/mic.js',
   'js/store/settings.js',
+  'js/store/db.js',
   'js/store/photos.js',
+  'js/store/chars.js',
+  'js/chars.js',
+  'js/logic/image.js',
   'js/scenes/title.js',
   'js/scenes/cake.js',
   'js/scenes/memories.js',
@@ -43,6 +47,10 @@ const ASSETS = [
   'voice/rub.m4a',
   'voice/finale.m4a',
   'voice/finale_g.m4a',
+  'img/chars/queen_main.webp',
+  'img/chars/queen_cheer.webp',
+  'img/chars/bunny.webp',
+  'img/chars/reindeer.webp',
   'icons/apple-touch-icon.png',
   'icons/icon-192.png',
   'icons/icon-512.png',

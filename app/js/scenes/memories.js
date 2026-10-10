@@ -8,6 +8,7 @@ import { listPhotos, photoBlob } from '../store/photos.js';
 import { paintFrost, createEraser } from '../fx/frost.js';
 import { sfx, playSong, stopSong, rubSound } from '../audio/engine.js';
 import { speakLine, cancelSpeech } from '../audio/voice.js';
+import { charEl } from '../chars.js';
 
 const AUTO_MELT_MS = 4500; // 触らなければこの時間で自動的に溶ける
 const AUTO_NEXT_MS = 6500; // 見えてからこの時間で次の写真へ
@@ -21,6 +22,7 @@ export function createMemories(app) {
   const hint = $('#rub-hint');
   const nextBtn = $('#btn-next');
   const empty = $('#mem-empty');
+  const titleChars = $('#mem-title-chars');
 
   nextBtn.innerHTML = ICON.next;
   $('.snowman-wrap', empty).innerHTML = snowmanSVG();
@@ -287,10 +289,14 @@ export function createMemories(app) {
     puffy(title, `${app.settings.name}の おもいで`);
     title.classList.remove('fade');
     title.hidden = false;
+    titleChars.textContent = '';
+    for (const el of [charEl('friend1'), charEl('friend2')]) if (el) titleChars.appendChild(el);
+    titleChars.classList.add('show');
     sfx('sparkle', 8);
     speakLine('memTitle', app.settings);
     await wait(2300);
     if (my !== token) return;
+    titleChars.classList.remove('show');
     title.classList.add('fade');
     await wait(550);
     if (my !== token) return;
@@ -317,6 +323,7 @@ export function createMemories(app) {
     cancelSpeech();
     stopSong(0.5);
     title.hidden = true;
+    titleChars.classList.remove('show');
   }
 
   return { enter, exit };

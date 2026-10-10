@@ -338,6 +338,20 @@ img, svg { -webkit-user-drag: none; user-select: none; }
 .twinkle { transform-box: fill-box; transform-origin: center; animation: twinkle 2.4s ease-in-out infinite; }
 @keyframes twinkle { 0%, 100% { opacity: .2; transform: scale(.5) rotate(0deg); } 50% { opacity: 1; transform: scale(1) rotate(45deg); } }
 
+/* ---------- キャラクター ---------- */
+.char { position: absolute; pointer-events: none; }
+.char-float { width: 100%; height: 100%; animation: char-float 4.4s ease-in-out infinite; }
+.char img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: 50% 100%;
+  /* 白いふち（シール風）とやわらかい影 */
+  filter: drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(0 8px 10px rgba(20, 10, 80, .32));
+}
+@keyframes char-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
 /* ---------- タイトル ---------- */
 #scene-title { justify-content: flex-start; }
 .title-hero {
@@ -405,6 +419,9 @@ img, svg { -webkit-user-drag: none; user-select: none; }
 @keyframes window-glow { from { opacity: .7; } to { opacity: 1; } }
 .hills-wrap { position: absolute; left: 0; right: 0; bottom: 0; height: min(15vh, 130px); }
 .hills-wrap .hills { display: block; width: 100%; height: 100%; }
+.char-title-main { right: max(1vw, var(--safe-r)); bottom: calc(var(--safe-b) + 1vh); height: min(21vh, 210px); aspect-ratio: 2 / 3; }
+.char-title-friend { left: calc(max(2vw, var(--safe-l)) + min(26vw, 15vh, 130px)); bottom: calc(var(--safe-b) + 1.5vh); height: min(11vh, 96px); aspect-ratio: 1; }
+.char-title-friend .char-float { animation-duration: 3.2s; animation-delay: -1.2s; }
 .title-snowman { position: absolute; left: max(2vw, var(--safe-l)); bottom: calc(var(--safe-b) + 2vh); width: min(30vw, 17vh, 150px); }
 
 .icon-btn { position: relative; }
@@ -499,6 +516,11 @@ img, svg { -webkit-user-drag: none; user-select: none; }
 @keyframes jump-in { from { opacity: 0; transform: translateY(-1.2em) scale(.4); } to { opacity: 1; transform: none; } }
 @keyframes fade-out { to { opacity: 0; transform: translateY(-12px); } }
 
+.char-party { position: absolute; left: 0; right: 0; bottom: calc(var(--safe-b) + 4px); height: min(40vh, 360px); z-index: 9; pointer-events: none; }
+.char-party .char { bottom: 0; transform: translateY(115%); transition: transform .75s cubic-bezier(.2, 1.35, .4, 1); }
+.char-party.show .char { transform: none; }
+.char-party-right { right: -3vw; height: 100%; aspect-ratio: 2 / 3; }
+.char-party-left { left: -1vw; height: 52%; aspect-ratio: 1; transition-delay: .18s !important; }
 .floating-note {
   position: absolute;
   z-index: 8;
@@ -598,6 +620,12 @@ img, svg { -webkit-user-drag: none; user-select: none; }
   pointer-events: none;
   padding: 0 12px;
 }
+.mem-title-chars { position: absolute; left: 0; right: 0; top: 40%; z-index: 8; height: min(19vh, 170px); transform: translateY(-115%); pointer-events: none; opacity: 0; transition: opacity .5s ease; }
+.mem-title-chars.show { opacity: 1; }
+.mem-title-chars .char { bottom: 0; height: 100%; aspect-ratio: 1; }
+.mem-title-chars .char:first-child { left: 6vw; }
+.mem-title-chars .char:last-child { right: 6vw; }
+.mem-title-chars .char:last-child .char-float { animation-delay: -2s; }
 .mem-title .ch { animation: jump-in .7s cubic-bezier(.2, 1.7, .4, 1) both, bob 2.2s ease-in-out .7s infinite; animation-delay: calc(var(--i) * .06s), calc(var(--i) * .06s + .7s); }
 .mem-title.fade { animation: fade-out .6s ease forwards; }
 
@@ -648,6 +676,12 @@ img, svg { -webkit-user-drag: none; user-select: none; }
 }
 .heart-stage.fan .heart-center { top: 30%; }
 .heart-stage.no-photos .heart-center { top: 50%; width: 70%; }
+.char-finale-main { position: relative; height: min(24vh, 210px); aspect-ratio: 2 / 3; }
+.heart-stage.fan .char-finale-main { height: min(17vh, 150px); }
+.char-letter { top: -64px; width: 84px; height: 84px; z-index: 2; }
+.char-letter.left { left: -8px; }
+.char-letter.right { right: -8px; }
+.char-letter.right .char-float { animation-delay: -1.8s; }
 .heart-center .tiara { width: 62%; height: auto; display: block; filter: drop-shadow(0 4px 8px rgba(20, 10, 80, .35)); animation: tiara-float 4s ease-in-out infinite; }
 .heart-center .puffy-word { font-size: min(8vw, 4.4vh, 40px); margin-top: 2px; }
 .mini {
@@ -811,6 +845,13 @@ img, svg { -webkit-user-drag: none; user-select: none; }
 .photo-item .ops button { width: 34px; height: 34px; padding: 0; border: 0; border-radius: 10px; background: #EFEAFF; color: #5A4BB0; font-size: 15px; }
 .photo-item .ops button:disabled { opacity: .35; }
 .photo-item .ops .del { background: #FFE3EA; color: #C2335F; }
+.char-list { display: grid; gap: 12px; margin: 12px 0 0; padding: 0; list-style: none; }
+.char-item { display: grid; grid-template-columns: 72px 1fr; gap: 12px; align-items: center; }
+.char-thumb { width: 72px; height: 72px; border-radius: 12px; object-fit: contain; background: repeating-conic-gradient(#EFEAFF 0 25%, #fff 0 50%) 0 0 / 16px 16px; }
+.char-item .char-name { margin: 0; color: #4A3D8F; }
+.char-item .char-where { margin: 2px 0 6px; color: #7A70AE; font-size: 12px; }
+.char-item .btn-row { gap: 8px; }
+.char-item .btn { min-height: 38px; padding: 6px 12px; font-size: 14px; }
 .photo-empty { margin: 10px 0 0; color: #7A70AE; font-size: 14px; }
 .import-progress { margin: 10px 0 0; color: #5A4BB0; }
 .meter-box { display: grid; gap: 8px; margin-top: 12px; }
@@ -852,6 +893,6 @@ img, svg { -webkit-user-drag: none; user-select: none; }
 /* ---------- 動きを減らす設定 ---------- */
 @media (prefers-reduced-motion: reduce) {
   .aurora .band, .puffy-word .ch, .num-wrap .bignum, .tiara-wrap .tiara, .heart-center .tiara,
-  .snowman .sm-body, .snowman .arm-l, .candy-btn.breathe, .round-btn.breathe, .rub-hint .hand,
+  .char-float, .snowman .sm-body, .snowman .arm-l, .candy-btn.breathe, .round-btn.breathe, .rub-hint .hand,
   .twinkle, .star, .castle .window, #wipe .wipe-flake .flake { animation: none !important; }
 }

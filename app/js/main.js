@@ -10,6 +10,7 @@ import { initVoice, preloadVoices, setVoiceEnabled, cancelSpeech, voiceCredit } 
 import { ICON } from './art/icons.js';
 import { snowflakeSVG } from './art/svg.js';
 import { demoBlobs } from './art/demo-photos.js';
+import { loadCharacters } from './chars.js';
 import { $, $$, wait, holdButton, centerOf } from './ui.js';
 import { createTitle } from './scenes/title.js';
 import { createCake } from './scenes/cake.js';
@@ -266,6 +267,7 @@ applySideEffects();
 current = scenes.title;
 show('title');
 scenes.title.enter();
+loadCharacters().then(() => scenes.title.render()); // 家族の画像があれば差し替えて描き直す
 
 // オフライン用（https で公開したときだけ。開発中のキャッシュ混乱を避ける）
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || params.has('sw'))) {

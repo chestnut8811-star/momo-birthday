@@ -4,6 +4,7 @@ import { bigNumberSVG, tiaraSVG, ribbonSVG, castleSVG, hillsSVG, snowmanSVG, sno
 import { ICON } from '../art/icons.js';
 import { $, puffy, centerOf } from '../ui.js';
 import { countPhotos } from '../store/photos.js';
+import { charEl } from '../chars.js';
 
 export function createTitle(app) {
   const root = $('#scene-title');
@@ -59,6 +60,10 @@ export function createTitle(app) {
     puffy(sai, 'さい', 'ice');
     ribbonEl.innerHTML = ribbonSVG('おたんじょうび おめでとう');
     document.title = `${s.name}の おたんじょうび`;
+    // 雪の女王さま（お城の横）とゆきうさぎ（雪だるまのとなり）
+    const scenery = $('.scenery', root);
+    scenery.querySelectorAll('.char').forEach((el) => el.remove());
+    for (const el of [charEl('main', 'char-title-main'), charEl('friend1', 'char-title-friend')]) if (el) scenery.appendChild(el);
     hint.hidden = (await countPhotos()) > 0;
   }
 

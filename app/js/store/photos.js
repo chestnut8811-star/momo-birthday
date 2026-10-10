@@ -1,93 +1,34 @@
 // 思い出の写真は端末の IndexedDB にだけ保存する（どこにも送信しない）
 // iOS の古い版で Blob を直接しまうと読めなくなる不具合があったため、ArrayBuffer で保存する
 
-const DB_NAME = 'momo-bday';
+import { txn, request, finished } from './db.js';
+
 const STORE = 'photos';
 const MAX_SIDE = 1600;
 const QUALITY = 0.85;
 
-let dbPromise = null;
-
-function openDB() {
-  if (dbPromise) return dbPromise;
-  dbPromise = new Promise((resolve, reject) => {
-    if (!('indexedDB' in window)) {
-      reject(new Error('indexeddb-unavailable'));
-      return;
-    }
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: 'id' });
-    };
-    req.onsuccess = () => {
-      const db = req.result;
-      db.onversionchange = () => {
-        db.close();
-        dbPromise = null;
-      };
-      db.onclose = () => {
-        dbPromise = null; // iOS で裏に回ったあとなどに閉じられたら、次に使うとき開き直す
-      };
-      resolve(db);
-    };
-    req.onerror = () => reject(req.error);
-    req.onblocked = () => reject(new Error('indexeddb-blocked'));
-  });
-  dbPromise.catch(() => {
-    dbPromise = null;
-  });
-  return dbPromise;
-}
-
-// トランザクションを始める。接続が閉じていたら開き直して1回だけやり直す
-async function txn(mode = 'readonly') {
-  for (let attempt = 0; ; attempt++) {
-    const db = await openDB();
-    try {
-      return db.transaction(STORE, mode);
-    } catch (e) {
-      dbPromise = null;
-      if (attempt >= 1 || e?.name !== 'InvalidStateError') throw e;
-    }
-  }
-}
-
-const request = (req) =>
-  new Promise((resolve, reject) => {
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-
-const finished = (tx) =>
-  new Promise((resolve, reject) => {
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-    tx.onabort = () => reject(tx.error || new Error('aborted'));
-  });
-
 export async function listPhotos() {
-  const all = await request((await txn()).objectStore(STORE).getAll());
+  const all = await request((await txn(STORE)).objectStore(STORE).getAll());
   return all.sort((a, b) => a.order - b.order || a.createdAt - b.createdAt);
 }
 
 export async function countPhotos() {
   try {
-    return await request((await txn()).objectStore(STORE).count());
+    return await request((await txn(STORE)).objectStore(STORE).count());
   } catch {
     return 0;
   }
 }
 
 async function putAll(records) {
-  const tx = await txn('readwrite');
+  const tx = await txn(STORE, 'readwrite');
   const store = tx.objectStore(STORE);
   for (const r of records) store.put(r);
   return finished(tx);
 }
 
 export async function updateCaption(id, caption) {
-  const tx = await txn('readwrite');
+  const tx = await txn(STORE, 'readwrite');
   const store = tx.objectStore(STORE);
   const rec = await request(store.get(id));
   if (rec) store.put({ ...rec, caption });
@@ -95,13 +36,13 @@ export async function updateCaption(id, caption) {
 }
 
 export async function deletePhoto(id) {
-  const tx = await txn('readwrite');
+  const tx = await txn(STORE, 'readwrite');
   tx.objectStore(STORE).delete(id);
   return finished(tx);
 }
 
 export async function clearPhotos() {
-  const tx = await txn('readwrite');
+  const tx = await txn(STORE, 'readwrite');
   tx.objectStore(STORE).clear();
   return finished(tx);
 }

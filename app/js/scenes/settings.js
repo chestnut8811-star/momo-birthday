@@ -6,6 +6,8 @@ import { GATE } from '../logic/blow-score.js';
 import { listPhotos, addPhotoBlobs, updateCaption, deletePhoto, saveOrder, clearPhotos, thumbBlob } from '../store/photos.js';
 import { BlowListener, micSupported } from '../audio/mic.js';
 import { speakLine, setVoiceEnabled } from '../audio/voice.js';
+import { CHAR_SLOTS, setCustomChar, deleteCustomChar, clearCustomChars } from '../store/chars.js';
+import { loadCharacters, charURL, isCustomChar } from '../chars.js';
 
 export function createSettings(app) {
   const sheet = $('#settings');
@@ -184,6 +186,81 @@ export function createSettings(app) {
     });
   }
 
+  // ---------- キャラクター ----------
+  const charList = $('#char-list');
+  const charIn = $('#char-input');
+  let charSlot = null;
+
+  function renderChars() {
+    charList.textContent = '';
+    for (const { slot, label, where } of CHAR_SLOTS) {
+      const custom = isCustomChar(slot);
+      const li = document.createElement('li');
+      li.className = 'char-item';
+      const img = document.createElement('img');
+      img.className = 'char-thumb';
+      img.alt = label;
+      const u = charURL(slot);
+      if (u) img.src = u;
+      const box = document.createElement('div');
+      const name = document.createElement('p');
+      name.className = 'char-name';
+      name.textContent = custom ? `${label} → 家族の画像` : label;
+      const whereEl = document.createElement('p');
+      whereEl.className = 'char-where';
+      whereEl.textContent = `登場する場面: ${where}`;
+      const row = document.createElement('div');
+      row.className = 'btn-row';
+      const pick = document.createElement('button');
+      pick.type = 'button';
+      pick.className = 'btn sub';
+      pick.textContent = custom ? '別の画像にかえる' : '家族の画像にかえる';
+      pick.addEventListener('click', () => {
+        charSlot = slot;
+        charIn.click();
+      });
+      row.appendChild(pick);
+      if (custom) {
+        const reset = document.createElement('button');
+        reset.type = 'button';
+        reset.className = 'btn sub';
+        reset.textContent = 'もとの絵にもどす';
+        reset.addEventListener('click', async () => {
+          await deleteCustomChar(slot).catch(() => {});
+          await loadCharacters();
+          renderChars();
+        });
+        row.appendChild(reset);
+      }
+      box.append(name, whereEl, row);
+      li.append(img, box);
+      charList.appendChild(li);
+    }
+  }
+
+  charIn.addEventListener('change', async () => {
+    const file = charIn.files[0];
+    charIn.value = '';
+    if (!file || !charSlot) return;
+    if (busy) {
+      app.toast('いま取り込み中です。終わってからもう一度選んでください');
+      return;
+    }
+    busy = true;
+    app.toast('画像を準備しています…');
+    try {
+      await setCustomChar(charSlot, file);
+      await loadCharacters();
+      renderChars();
+      app.toast('キャラクターの画像を入れました');
+    } catch {
+      app.toast('画像を読み込めませんでした');
+    } finally {
+      busy = false;
+      charSlot = null;
+    }
+  });
+
   // ---------- マイクのテスト ----------
   micBtn.addEventListener('click', async () => {
     if (listener) {
@@ -224,11 +301,14 @@ export function createSettings(app) {
 
   // ---------- 全消去 ----------
   $('#reset-all').addEventListener('click', async () => {
-    if (!window.confirm('写真と設定をすべて消して、最初の状態に戻します。よろしいですか？')) return;
+    if (!window.confirm('写真・キャラクター画像・設定をすべて消して、最初の状態に戻します。よろしいですか？')) return;
     await clearPhotos().catch(() => {});
+    await clearCustomChars().catch(() => {});
+    await loadCharacters();
     app.resetSettings();
     fill();
     renderPhotos();
+    renderChars();
     app.toast('すべて消しました');
   });
 
@@ -239,6 +319,7 @@ export function createSettings(app) {
     sheet.scrollTop = 0;
     restartClass(sheet, 'open');
     renderPhotos();
+    renderChars();
   }
 
   function close() {

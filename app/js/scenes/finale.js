@@ -8,6 +8,7 @@ import { messageOf } from '../logic/config.js';
 import { listPhotos, thumbBlob } from '../store/photos.js';
 import { sfx, playSong, stopSong } from '../audio/engine.js';
 import { speakLine, cancelSpeech } from '../audio/voice.js';
+import { charEl } from '../chars.js';
 
 const MAX_MINIS = 18;
 
@@ -20,7 +21,7 @@ export function createFinale(app) {
   const letterFrom = $('#letter-from');
   const actions = $('#finale-actions');
   const letter = $('#letter');
-  $('.tiara-slot', center).innerHTML = tiaraSVG();
+  const centerSlot = $('.tiara-slot', center);
 
   let token = 0;
   const urls = [];
@@ -36,6 +37,13 @@ export function createFinale(app) {
     app.keepAwake(true);
     const s = app.settings;
     puffy(ageWord, `${s.age}さい`, 'ice');
+    // 真ん中は雪の女王さま（絵がなければティアラ）。カードの上の角からなかまがのぞく
+    centerSlot.textContent = '';
+    const queen = charEl('main', 'char-finale-main');
+    if (queen) centerSlot.appendChild(queen);
+    else centerSlot.innerHTML = tiaraSVG();
+    letter.querySelectorAll('.char').forEach((el) => el.remove());
+    for (const el of [charEl('friend1', 'char-letter left'), charEl('friend2', 'char-letter right')]) if (el) letter.appendChild(el);
     const msg = messageOf(s);
     letterBody.textContent = msg;
     letter.classList.toggle('long', [...msg].length > 90);

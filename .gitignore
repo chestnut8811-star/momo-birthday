@@ -5,3 +5,6 @@ tools/icon-build/
 .DS_Store
 node_modules/
 voice-samples/
+
+# 家族だけで使う画像（キャラクター）。公開しない
+family-only/

@@ -8,6 +8,7 @@ import { createCandles, stepCandles } from '../logic/blow-score.js';
 import { sfx, playSong, stopSong } from '../audio/engine.js';
 import { speakLine, cancelSpeech } from '../audio/voice.js';
 import { BlowListener, micSupported, createFakeBreath } from '../audio/mic.js';
+import { charEl } from '../chars.js';
 
 export function createCake(app) {
   const root = $('#scene-cake');
@@ -18,6 +19,7 @@ export function createCake(app) {
   const celebrate = $('#celebrate');
   const word = $('#celebrate-word');
   const sub = $('#celebrate-sub');
+  const charParty = $('#char-party');
   const chip = $('#listen-chip');
   const chipLevel = $('.level i', chip);
   $('.mic-dot', chip).innerHTML = ICON.mic;
@@ -339,6 +341,7 @@ export function createCake(app) {
     celebrate.classList.remove('fade');
     celebrate.hidden = false;
     root.classList.add('partying');
+    showPartyChars();
     setSnowman('cheer');
     say(LINES.allOut());
     await wait(900);
@@ -351,6 +354,7 @@ export function createCake(app) {
     if (my !== token) return;
     celebrate.hidden = true;
     root.classList.remove('partying');
+    hidePartyChars();
     setSnowman('idle');
     say(LINES.toMemories(app.settings), { voice: 'toMemories' });
     showActions([
@@ -359,9 +363,21 @@ export function createCake(app) {
     ]);
   }
 
+  // お祝いの主役（右）となかま（左）が下から飛び出す
+  function showPartyChars() {
+    charParty.textContent = '';
+    for (const el of [charEl('cheer', 'char-party-right'), charEl('friend2', 'char-party-left')]) if (el) charParty.appendChild(el);
+    void charParty.offsetWidth;
+    charParty.classList.add('show');
+  }
+  function hidePartyChars() {
+    charParty.classList.remove('show');
+  }
+
   async function relight() {
     const my = ++token;
     root.classList.remove('partying');
+    hidePartyChars();
     state = 'lighting';
     lastRemainSaid = -1;
     celebrate.hidden = true;
@@ -391,6 +407,7 @@ export function createCake(app) {
     stopSong(0.3);
     cancelSpeech();
     root.classList.remove('lights-down', 'is-blackout', 'partying');
+    hidePartyChars();
     celebrate.hidden = true;
     setSnowman('idle');
     root.querySelectorAll('.floating-note').forEach((n) => n.remove());

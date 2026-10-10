@@ -83,6 +83,7 @@
         <div class="bubble" id="cake-bubble" aria-live="polite"><p></p></div>
       </div>
       <div class="cake-stage" id="cake-stage"></div>
+      <div class="char-party" id="char-party" aria-hidden="true"></div>
       <div class="celebrate" id="celebrate" hidden>
         <div id="celebrate-word"></div>
         <div class="celebrate-sub" id="celebrate-sub"></div>
@@ -102,6 +103,7 @@
         <button type="button" class="icon-btn sound-toggle"></button>
       </div>
       <div class="card-stage" id="card-stage"></div>
+      <div class="mem-title-chars" id="mem-title-chars" aria-hidden="true"></div>
       <div class="mem-title" id="mem-title" hidden></div>
       <div class="actions mem-actions">
         <div class="rub-hint gone" id="rub-hint"><span class="hand" aria-hidden="true">👆</span><span>こおりを こすってね</span></div>
@@ -173,6 +175,13 @@
     </section>
 
     <section>
+      <h3>キャラクター</h3>
+      <p class="note" style="margin-top:0">アプリに入っている絵のかわりに、ご家族の画像（キャラクターの衣装を着た写真など）を登場させられます。背景が透明な PNG がおすすめです（白い背景は自動で消します）。入れた画像はこの iPhone の中にだけ保存され、公開されません。</p>
+      <ul class="char-list" id="char-list"></ul>
+      <input type="file" id="char-input" class="visually-hidden" accept="image/*" tabindex="-1" aria-hidden="true">
+    </section>
+
+    <section>
       <h3>メッセージカード</h3>
       <label class="field"><span>メッセージ（空欄なら名前と年齢入りの文章になります）</span>
         <textarea id="set-message" maxlength="200"></textarea>
@@ -219,7 +228,7 @@
 
     <section>
       <h3>データ</h3>
-      <button type="button" class="btn danger" id="reset-all">写真と設定をすべて消す</button>
+      <button type="button" class="btn danger" id="reset-all">写真・キャラクター画像・設定をすべて消す</button>
     </section>
   </div>
 

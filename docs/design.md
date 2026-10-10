@@ -50,7 +50,8 @@
 ## データモデル
 
 - 設定（localStorage `momo-bday:settings`）: `{ name, age(1-10), message, from, difficulty('easy'|'normal'|'hard'), sound, voice }`。message が空なら名前と年齢から自動生成
-- 写真（IndexedDB `momo-bday` / store `photos`, keyPath `id`）: `{ id, data: ArrayBuffer, type, w, h, caption, order, createdAt }`
+- 写真（IndexedDB `momo-bday` v2 / store `photos`, keyPath `id`）: `{ id, data: ArrayBuffer, thumb, type, w, h, caption, order, createdAt }`
+- キャラクターの差し替え（同 DB / store `chars`, keyPath `slot`）: `{ slot: main|cheer|friend1|friend2, data: ArrayBuffer(PNG), type, w, h, updatedAt }`。無ければ `app/img/chars/*.webp`（同梱のオリジナル）を使う。取り込み時に白い背景を縁から消し、余白を詰める（`logic/image.js`、Node でテスト）
 
 ## 主要な処理フロー
 

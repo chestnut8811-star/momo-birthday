@@ -24,7 +24,7 @@ test('オフライン用キャッシュ: アプリの全ファイルが sw.js �
   const assets = new Set(swAssets());
   const files = walk(app)
     .map((p) => relative(app, p).split('\\').join('/'))
-    .filter((p) => /^(js|css|icons|voice)\//.test(p) || p === 'index.html' || p === 'manifest.webmanifest')
+    .filter((p) => /^(js|css|icons|voice|img)\//.test(p) || p === 'index.html' || p === 'manifest.webmanifest')
     .filter((p) => !p.endsWith('.DS_Store'));
   const missing = files.filter((f) => !assets.has(f));
   assert.deepEqual(missing, [], `ASSETS に未登録: ${missing.join(', ')}`);
