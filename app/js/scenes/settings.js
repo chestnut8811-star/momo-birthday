@@ -5,7 +5,7 @@ import { defaultMessage, AGE_MIN, AGE_MAX } from '../logic/config.js';
 import { GATE } from '../logic/blow-score.js';
 import { listPhotos, addPhotoBlobs, updateCaption, deletePhoto, saveOrder, clearPhotos, thumbBlob } from '../store/photos.js';
 import { BlowListener, micSupported } from '../audio/mic.js';
-import { primeVoice, speak, setVoiceEnabled, voiceSupported } from '../audio/voice.js';
+import { speakLine, setVoiceEnabled } from '../audio/voice.js';
 
 export function createSettings(app) {
   const sheet = $('#settings');
@@ -72,20 +72,14 @@ export function createSettings(app) {
   });
   swVoice.addEventListener('click', () => {
     set({ voice: !app.settings.voice });
-    if (app.settings.voice) primeVoice();
     fill();
   });
   $('#voice-test').addEventListener('click', async () => {
-    if (!voiceSupported()) {
-      app.toast('この端末では読み上げを使えません');
-      return;
-    }
     app.unlock();
-    primeVoice();
     setVoiceEnabled(true); // 試すあいだだけ有効にする
-    const ok = await speak(`${app.settings.name}、おたんじょうび おめでとう！`);
+    const ok = await speakLine('hello', app.settings);
     setVoiceEnabled(app.settings.voice);
-    if (!ok) app.toast('読み上げを開始できませんでした');
+    if (!ok) app.toast('声を再生できませんでした');
   });
 
   // ---------- 写真 ----------

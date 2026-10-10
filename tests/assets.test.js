@@ -24,7 +24,7 @@ test('オフライン用キャッシュ: アプリの全ファイルが sw.js �
   const assets = new Set(swAssets());
   const files = walk(app)
     .map((p) => relative(app, p).split('\\').join('/'))
-    .filter((p) => /^(js|css|icons)\//.test(p) || p === 'index.html' || p === 'manifest.webmanifest')
+    .filter((p) => /^(js|css|icons|voice)\//.test(p) || p === 'index.html' || p === 'manifest.webmanifest')
     .filter((p) => !p.endsWith('.DS_Store'));
   const missing = files.filter((f) => !assets.has(f));
   assert.deepEqual(missing, [], `ASSETS に未登録: ${missing.join(', ')}`);
@@ -42,4 +42,17 @@ test('index.html と manifest が参照するファイルが実在する', () =>
   refs.push(...manifest.icons.map((i) => i.src));
   const gone = refs.filter((r) => !existsSync(join(app, r)));
   assert.deepEqual(gone, []);
+});
+
+test('声: voice.json のせりふファイルが揃っていて、名前入りのせりふには名前なしの代わりがある', () => {
+  const meta = JSON.parse(readFileSync(join(app, 'voice', 'voice.json'), 'utf8'));
+  assert.ok(meta.credit.startsWith('VOICEVOX:'), 'クレジット表記がない');
+  for (const [id, line] of Object.entries(meta.lines)) {
+    assert.ok(existsSync(join(app, 'voice', line.file)), `${id} の音声ファイルがない`);
+    if (line.needs?.length) assert.ok(meta.lines[line.fallback], `${id} に名前なしの代わりがない`);
+  }
+  // アプリが話させるせりふがすべてある
+  for (const id of ['hello', 'sing', 'blow', 'again', 'allOut', 'tapHint', 'toMemories', 'memTitle', 'rub', 'finale']) {
+    assert.ok(meta.lines[id], `${id} がない`);
+  }
 });

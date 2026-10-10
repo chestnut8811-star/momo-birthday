@@ -6,7 +6,7 @@ import { addPhotoBlobs, countPhotos } from './store/photos.js';
 import { createSnow } from './fx/snow.js';
 import { createMagic } from './fx/magic.js';
 import { unlockAudio, resumeAudio, setMuted, sfx } from './audio/engine.js';
-import { primeVoice, setVoiceEnabled, cancelSpeech } from './audio/voice.js';
+import { initVoice, preloadVoices, setVoiceEnabled, cancelSpeech, voiceCredit } from './audio/voice.js';
 import { ICON } from './art/icons.js';
 import { snowflakeSVG } from './art/svg.js';
 import { demoBlobs } from './art/demo-photos.js';
@@ -92,7 +92,7 @@ app.resetSettings = () => {
 app.unlock = () => {
   unlockAudio();
   setMuted(!app.settings.sound);
-  if (app.settings.voice) primeVoice();
+  preloadVoices(); // せりふの音声を先に読み込んでおく
 };
 
 app.addDemoPhotos = (onProgress) => addPhotoBlobs(demoBlobs(), onProgress);
@@ -250,6 +250,11 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ---------- 起動 ----------
+initVoice().then(() => {
+  $$('.voice-credit').forEach((el) => {
+    el.textContent = voiceCredit();
+  });
+});
 applySideEffects();
 current = scenes.title;
 show('title');

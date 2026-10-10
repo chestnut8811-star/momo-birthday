@@ -7,6 +7,7 @@ import { heartPoints, fanPoints } from '../logic/layout.js';
 import { messageOf } from '../logic/config.js';
 import { listPhotos, thumbBlob } from '../store/photos.js';
 import { sfx, playSong, stopSong } from '../audio/engine.js';
+import { speakLine, cancelSpeech } from '../audio/voice.js';
 
 const MAX_MINIS = 18;
 
@@ -92,6 +93,9 @@ export function createFinale(app) {
 
     sfx('sparkle', 8);
     setTimeout(() => {
+      if (my === token) speakLine('finale', app.settings);
+    }, 1300);
+    setTimeout(() => {
       if (my !== token) return;
       app.magic.rain(50, 2);
       const c = heart.getBoundingClientRect();
@@ -105,6 +109,7 @@ export function createFinale(app) {
 
   function exit() {
     token++;
+    cancelSpeech();
     stopSong(0.5);
     cleanup();
   }

@@ -390,6 +390,7 @@ img, svg { -webkit-user-drag: none; user-select: none; }
   line-height: 1.5;
   text-align: center;
 }
+.credit-mini { position: absolute; right: calc(var(--safe-r) + 10px); bottom: calc(var(--safe-b) + 6px); z-index: 5; margin: 0; color: rgba(70, 60, 140, .7); font-size: 10px; pointer-events: none; }
 .scenery { position: absolute; left: 0; right: 0; bottom: 0; height: 36vh; z-index: 1; pointer-events: none; }
 .castle-wrap {
   position: absolute;

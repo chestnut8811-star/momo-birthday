@@ -8,6 +8,9 @@ export const CAPTION_MAX = 30;
 export const AGE_MIN = 1;
 export const AGE_MAX = 10;
 
+// 声の方式。読み上げ（音声合成）時代に保存された voice の値は引き継がない
+export const VOICE_KIND = 'voicevox';
+
 export const DEFAULT_SETTINGS = Object.freeze({
   name: 'ももちゃん',
   age: 4,
@@ -15,7 +18,8 @@ export const DEFAULT_SETTINGS = Object.freeze({
   from: 'みんなより',
   difficulty: 'easy',
   sound: true,
-  voice: false, // 読み上げは端末によって固まることがあるため、設定で試してからオンにする
+  voice: true,
+  voiceKind: VOICE_KIND,
 });
 
 export function sanitizeSettings(raw) {
@@ -31,7 +35,7 @@ export function sanitizeSettings(raw) {
   if (typeof raw.from === 'string') s.from = raw.from.trim().slice(0, FROM_MAX);
   if (DIFFICULTIES.includes(raw.difficulty)) s.difficulty = raw.difficulty;
   if (typeof raw.sound === 'boolean') s.sound = raw.sound;
-  if (typeof raw.voice === 'boolean') s.voice = raw.voice;
+  if (typeof raw.voice === 'boolean' && raw.voiceKind === VOICE_KIND) s.voice = raw.voice;
   return s;
 }
 

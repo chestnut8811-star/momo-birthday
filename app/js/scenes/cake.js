@@ -5,8 +5,8 @@ import { ICON } from '../art/icons.js';
 import { $, wait, puffy, button, restartClass } from '../ui.js';
 import { LINES } from '../logic/config.js';
 import { createCandles, stepCandles } from '../logic/blow-score.js';
-import { sfx, playSong, stopSong, duck } from '../audio/engine.js';
-import { speak, cancelSpeech } from '../audio/voice.js';
+import { sfx, playSong, stopSong } from '../audio/engine.js';
+import { speakLine, cancelSpeech } from '../audio/voice.js';
 import { BlowListener, micSupported, createFakeBreath } from '../audio/mic.js';
 
 export function createCake(app) {
@@ -50,15 +50,14 @@ export function createCake(app) {
     snowman.classList.toggle('talk', mode === 'talk');
   }
 
-  function say(text, { voice = false } = {}) {
+  // 吹き出しに出し、voice があればそのせりふの音声も流す（話し終わるまで待てる）
+  function say(text, { voice = null } = {}) {
     bubbleText.textContent = text;
     restartClass(bubble, 'pop');
     if (!voice) return Promise.resolve();
     setSnowman('talk');
-    duck(true);
-    return speak(text).finally(() => {
+    return speakLine(voice, app.settings).finally(() => {
       if (state !== 'done' && state !== 'song') setSnowman('idle');
-      duck(false);
     });
   }
 
@@ -200,16 +199,16 @@ export function createCake(app) {
     }
     if (my !== token) return;
     state = 'ready';
-    const hello = say(LINES.hello(app.settings), { voice: true });
+    const hello = say(LINES.hello(app.settings), { voice: 'hello' });
     showActions([
       { label: 'おうたを うたう', icon: ICON.note, cls: 'breathe', onClick: sing },
       { label: 'すぐ ふーっ', icon: ICON.wind, cls: 'ice small', onClick: () => startBlow() },
     ]);
     await hello;
     if (my !== token || state !== 'ready') return;
-    await wait(app.settings.voice ? 250 : 1800);
+    await wait(app.settings.voice ? 300 : 1800);
     if (my !== token || state !== 'ready') return;
-    say(LINES.sing(), { voice: true });
+    say(LINES.sing(), { voice: 'sing' });
   }
 
   function sing() {
@@ -233,13 +232,14 @@ export function createCake(app) {
     startBlow();
   }
 
-  async function startBlow(line = LINES.blow()) {
+  async function startBlow(line = LINES.blow(), voiceId = 'blow') {
     const my = token;
     if (state === 'blow' || state === 'done') return;
     state = 'blow';
     actions.textContent = '';
     stopSong(0.3);
-    await say(line, { voice: true });
+    // 声はマイクを開く前に話し終える（スピーカーの声を息と取り違えないように）
+    await say(line, { voice: voiceId });
     if (my !== token || state !== 'blow') return;
     await startListening(my);
   }
@@ -272,7 +272,7 @@ export function createCake(app) {
       console.info('マイクを使えないため、タッチで消す方法に切り替えます', e?.name || e);
       listener?.stop();
       listener = null;
-      if (my === token && state === 'blow') say(LINES.tapHint());
+      if (my === token && state === 'blow') say(LINES.tapHint(), { voice: 'tapHint' });
       return;
     }
     if (my !== token || state !== 'blow') {
@@ -328,7 +328,7 @@ export function createCake(app) {
     say(LINES.allOut());
     await wait(900);
     if (my !== token) return;
-    speak(`${LINES.allOut()} おめでとう！`);
+    speakLine('allOut', app.settings);
     await wait(3600);
     if (my !== token) return;
     celebrate.classList.add('fade');
@@ -337,7 +337,7 @@ export function createCake(app) {
     celebrate.hidden = true;
     root.classList.remove('partying');
     setSnowman('idle');
-    say(LINES.toMemories(app.settings));
+    say(LINES.toMemories(app.settings), { voice: 'toMemories' });
     showActions([
       { label: 'おもいでを みる', icon: ICON.heart, cls: 'breathe', onClick: (e) => app.go('memories', { x: e.clientX, y: e.clientY }) },
       { label: 'もういっかい', icon: ICON.again, cls: 'ice small', onClick: relight },
@@ -363,7 +363,7 @@ export function createCake(app) {
     }
     if (my !== token) return;
     state = 'ready';
-    startBlow(LINES.again());
+    startBlow(LINES.again(), 'again');
   }
 
   function exit() {

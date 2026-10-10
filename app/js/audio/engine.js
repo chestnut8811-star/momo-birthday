@@ -5,6 +5,7 @@ let ctx = null;
 let master = null;
 let musicBus = null;
 let sfxBus = null;
+let voiceBus = null;
 let reverbIn = null;
 let noiseBuf = null;
 let muted = false;
@@ -75,6 +76,9 @@ function build() {
   sfxBus = ctx.createGain();
   sfxBus.gain.value = 0.85;
   sfxBus.connect(master);
+  voiceBus = ctx.createGain();
+  voiceBus.gain.value = 1.1;
+  voiceBus.connect(master);
 
   // 小さなホールの響き
   const conv = ctx.createConvolver();
@@ -115,7 +119,24 @@ export function setMuted(m) {
   if (master) master.gain.setTargetAtTime(muted ? 0 : MASTER_GAIN, ctx.currentTime, 0.04);
 }
 
-// 読み上げ中は曲を小さくする
+// 音声ファイル（せりふ）をデコードする。古い Safari のコールバック形式にも対応
+export function decodeAudio(arrayBuffer) {
+  return new Promise((resolve, reject) => {
+    const p = ctx.decodeAudioData(arrayBuffer, resolve, reject);
+    if (p && typeof p.then === 'function') p.then(resolve, reject);
+  });
+}
+
+export function playVoiceBuffer(buffer) {
+  if (!ctx || !voiceBus) return null;
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+  src.connect(voiceBus);
+  src.start();
+  return src;
+}
+
+// せりふの間は曲を小さくする
 export function duck(on) {
   if (musicBus) musicBus.gain.setTargetAtTime(on ? MUSIC_GAIN * 0.35 : MUSIC_GAIN, ctx.currentTime, 0.12);
 }

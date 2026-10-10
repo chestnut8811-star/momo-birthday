@@ -9,7 +9,7 @@
 | 言語 / フレームワーク | 素の HTML / CSS / JavaScript（ES Modules） | ビルド不要。依存ゼロで長期に動く |
 | 描画 | インライン SVG（ケーキ・雪だるま・城など）＋ Canvas 2D（雪・紙吹雪・霜） | 権利問題のないオリジナル絵。拡大しても綺麗 |
 | 音 | Web Audio API でオルゴール音色と効果音を合成 | 音源ファイル不要・オフライン |
-| 声 | Web Speech API（speechSynthesis, ja-JP） | 字の読めない4歳児への案内 |
+| 声 | VOICEVOX（ずんだもん あまあま）で事前生成した m4a を Web Audio で再生（tools/make-voices.py） | 字の読めない4歳児への案内。iOS の音声合成は準備で Safari ごと固まる事例があったため不採用 |
 | 息の検出 | getUserMedia ＋ AnalyserNode（音量・低域比・スペクトル平坦度） | 端末内で完結 |
 | データ保存 | 設定: localStorage / 写真: IndexedDB（ArrayBuffer で保存） | 端末内のみ。Blob 直保存の iOS 既知不具合を避ける |
 | オフライン | Service Worker（アプリ本体のみキャッシュ） | ホーム画面から全画面起動 |
@@ -24,7 +24,8 @@
 │   ├── manifest.webmanifest
 │   ├── sw.js
 │   ├── css/app.css
-│   ├── icons/                (tools/make-icons.sh で SVG から生成)
+│   ├── icons/                (tools/make-icons.mjs で SVG から生成)
+│   ├── voice/                (tools/make-voices.py で VOICEVOX から生成)
 │   └── js/
 │       ├── main.js           起動・場面切り替え・共通 UI
 │       ├── logic/            DOM に依存しない純粋ロジック（Node でテスト）
@@ -36,7 +37,7 @@
 │       ├── fx/snow.js        背景の雪
 │       ├── fx/magic.js       タッチのキラキラ・紙吹雪
 │       ├── audio/engine.js   オルゴール・効果音・曲
-│       ├── audio/voice.js    読み上げ
+│       ├── audio/voice.js    せりふの再生（voice/*.m4a）
 │       ├── audio/mic.js      マイクと息の検出
 │       ├── store/settings.js localStorage
 │       ├── store/photos.js   IndexedDB・画像縮小

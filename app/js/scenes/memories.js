@@ -7,6 +7,7 @@ import { fitPhoto } from '../logic/layout.js';
 import { listPhotos, photoBlob } from '../store/photos.js';
 import { paintFrost, createEraser } from '../fx/frost.js';
 import { sfx, playSong, stopSong, rubSound } from '../audio/engine.js';
+import { speakLine, cancelSpeech } from '../audio/voice.js';
 
 const AUTO_MELT_MS = 4500; // 触らなければこの時間で自動的に溶ける
 const AUTO_NEXT_MS = 6500; // 見えてからこの時間で次の写真へ
@@ -264,6 +265,7 @@ export function createMemories(app) {
     title.classList.remove('fade');
     title.hidden = false;
     sfx('sparkle', 8);
+    speakLine('memTitle', app.settings);
     await wait(2300);
     if (my !== token) return;
     title.classList.add('fade');
@@ -272,6 +274,8 @@ export function createMemories(app) {
     title.hidden = true;
     nextBtn.hidden = false;
     show(0);
+    await wait(1200);
+    if (my === token && card && !card.revealed) speakLine('rub', app.settings);
   }
 
   function cleanup() {
@@ -284,6 +288,7 @@ export function createMemories(app) {
   function exit() {
     token++;
     cleanup();
+    cancelSpeech();
     stopSong(0.5);
     title.hidden = true;
   }
