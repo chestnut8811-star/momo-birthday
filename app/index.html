@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>ももちゃんの おたんじょうび</title>
+  <meta name="description" content="ゆきの おしろで おたんじょうびを おいわいする アプリ">
+  <meta name="theme-color" content="#1A1752">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ももちゃん">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/app.css">
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <div id="sky" aria-hidden="true">
+    <svg class="aurora" viewBox="0 0 400 300" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="au-a" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0" stop-color="#8CFFD9" stop-opacity="0"/>
+          <stop offset=".14" stop-color="#8CFFD9" stop-opacity=".55"/>
+          <stop offset=".5" stop-color="#8FD3FF" stop-opacity=".22"/>
+          <stop offset="1" stop-color="#C3ADFF" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="au-b" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0" stop-color="#FFB3E0" stop-opacity="0"/>
+          <stop offset=".16" stop-color="#FFB3E0" stop-opacity=".4"/>
+          <stop offset=".55" stop-color="#C3ADFF" stop-opacity=".18"/>
+          <stop offset="1" stop-color="#C3ADFF" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path class="band band-b" d="M-40 128C40 92 110 150 190 116S330 74 440 112L440 6C340 -16 270 40 190 18S40 -6 -40 22Z" fill="url(#au-b)"/>
+      <path class="band band-a" d="M-40 176C50 126 120 206 205 160S350 112 440 158L440 34C350 4 270 70 200 40S50 18 -40 52Z" fill="url(#au-a)"/>
+    </svg>
+    <div class="horizon"></div>
+  </div>
+  <canvas id="snow" aria-hidden="true"></canvas>
+
+  <main id="stage">
+    <!-- タイトル -->
+    <section class="scene" id="scene-title" aria-label="タイトル">
+      <div class="topbar">
+        <span></span>
+        <button type="button" class="icon-btn gear" id="gear" aria-label="おうちのかた用の設定（長押しで開く）">
+          <svg class="ring" viewBox="0 0 60 60" aria-hidden="true"><circle cx="30" cy="30" r="25"/></svg>
+        </button>
+      </div>
+      <div class="title-hero">
+        <div class="tiara-wrap" data-art="tiara"></div>
+        <div class="num-wrap">
+          <div data-art="bignum"></div>
+          <span class="sai"></span>
+        </div>
+        <h1 class="name-title" id="title-name"></h1>
+        <div class="ribbon-wrap" data-art="ribbon"></div>
+      </div>
+      <div class="title-actions">
+        <button type="button" class="candy-btn big breathe" id="btn-start"><span class="ico"></span><span>はじめる</span></button>
+        <p class="parent-hint" id="parent-hint" hidden>おうちのかたへ：右上の ⚙ を長押しすると、写真や名前を設定できます</p>
+      </div>
+      <div class="scenery" aria-hidden="true">
+        <div class="castle-wrap" data-art="castle"></div>
+        <div class="hills-wrap" data-art="hills"></div>
+        <div class="title-snowman" data-art="snowman"></div>
+      </div>
+    </section>
+
+    <!-- ケーキ -->
+    <section class="scene" id="scene-cake" aria-label="ケーキ">
+      <div class="dim" aria-hidden="true"></div>
+      <div class="topbar">
+        <button type="button" class="icon-btn home" data-go="title" aria-label="さいしょに もどる"></button>
+        <button type="button" class="icon-btn sound-toggle"></button>
+      </div>
+      <div class="guide">
+        <div class="guide-snowman" aria-hidden="true"></div>
+        <div class="bubble" id="cake-bubble" aria-live="polite"><p></p></div>
+      </div>
+      <div class="cake-stage" id="cake-stage"></div>
+      <div class="celebrate" id="celebrate" hidden>
+        <div id="celebrate-word"></div>
+        <div class="celebrate-sub" id="celebrate-sub"></div>
+      </div>
+      <div class="listen-chip" id="listen-chip" hidden>
+        <span class="mic-dot"></span><span>きいてるよ</span><span class="level"><i></i></span>
+      </div>
+      <div class="actions" id="cake-actions"></div>
+      <div class="blackout" aria-hidden="true"></div>
+    </section>
+
+    <!-- 思い出 -->
+    <section class="scene" id="scene-memories" aria-label="おもいで">
+      <div class="topbar">
+        <button type="button" class="icon-btn home" data-go="title" aria-label="さいしょに もどる"></button>
+        <div class="progress" id="mem-progress" aria-hidden="true"></div>
+        <button type="button" class="icon-btn sound-toggle"></button>
+      </div>
+      <div class="card-stage" id="card-stage"></div>
+      <div class="mem-title" id="mem-title" hidden></div>
+      <div class="actions mem-actions">
+        <div class="rub-hint gone" id="rub-hint"><span class="hand" aria-hidden="true">👆</span><span>こおりを こすってね</span></div>
+        <button type="button" class="round-btn next" id="btn-next" aria-label="つぎの しゃしん" hidden></button>
+      </div>
+      <div class="mem-empty" id="mem-empty" hidden>
+        <div class="snowman-wrap" aria-hidden="true"></div>
+        <p class="say">しゃしんが まだ ないよ</p>
+        <p class="parent">おうちのかたへ：タイトル画面の右上 ⚙ を長押しして、写真を選んでください。サンプルで演出を試すこともできます。</p>
+        <div class="actions btns"></div>
+      </div>
+    </section>
+
+    <!-- フィナーレ -->
+    <section class="scene" id="scene-finale" aria-label="メッセージ">
+      <div class="topbar">
+        <button type="button" class="icon-btn home" data-go="title" aria-label="さいしょに もどる"></button>
+        <button type="button" class="icon-btn sound-toggle"></button>
+      </div>
+      <div class="heart-stage" id="heart-stage">
+        <div class="heart-center">
+          <div class="tiara-slot"></div>
+          <div id="finale-age"></div>
+        </div>
+      </div>
+      <article class="letter" id="letter">
+        <p class="letter-body" id="letter-body"></p>
+        <p class="letter-from" id="letter-from"></p>
+      </article>
+      <div class="actions" id="finale-actions"></div>
+    </section>
+  </main>
+
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div id="wipe" aria-hidden="true"><div class="wipe-flake"></div></div>
+
+  <!-- 設定（おうちのかた用） -->
+  <div id="settings" class="sheet" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
+    <div class="sheet-head">
+      <h2 id="settings-title">おうちのかた用の設定</h2>
+      <button type="button" class="btn" id="settings-close">完了</button>
+    </div>
+
+    <section>
+      <h3>お祝いする子</h3>
+      <label class="field"><span>名前（タイトルとケーキに表示）</span>
+        <input type="text" id="set-name" maxlength="10" autocomplete="off" enterkeyhint="done">
+      </label>
+      <div class="field"><span>年齢（ロウソクの本数）</span>
+        <div class="stepper">
+          <button type="button" id="age-minus" aria-label="1さい へらす">−</button>
+          <output id="age-out">4さい</output>
+          <button type="button" id="age-plus" aria-label="1さい ふやす">＋</button>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h3>思い出の写真</h3>
+      <div class="btn-row">
+        <button type="button" class="btn" id="pick-photos">写真を選ぶ</button>
+        <button type="button" class="btn sub" id="demo-photos">サンプル写真を入れる</button>
+      </div>
+      <input type="file" id="photo-input" class="visually-hidden" accept="image/*" multiple tabindex="-1" aria-hidden="true">
+      <p class="import-progress" id="import-progress" hidden></p>
+      <ul class="photo-list" id="photo-list"></ul>
+      <p class="photo-empty" id="photo-empty">まだ写真がありません。「写真を選ぶ」から、何枚でもまとめて選べます。</p>
+      <p class="note">写真はこの iPhone の中にだけ保存され、どこにも送信されません。ホーム画面に追加して使う場合は、ホーム画面のアイコンから開いたあとで写真を選んでください（Safari とホーム画面のアプリでは保存場所が別になります）。</p>
+    </section>
+
+    <section>
+      <h3>メッセージカード</h3>
+      <label class="field"><span>メッセージ（空欄なら名前と年齢入りの文章になります）</span>
+        <textarea id="set-message" maxlength="200"></textarea>
+      </label>
+      <label class="field"><span>差出人</span>
+        <input type="text" id="set-from" maxlength="20" autocomplete="off" enterkeyhint="done">
+      </label>
+    </section>
+
+    <section>
+      <h3>ロウソクの消えやすさ</h3>
+      <div class="seg" role="group" aria-label="ロウソクの消えやすさ">
+        <button type="button" data-diff="easy">やさしい</button>
+        <button type="button" data-diff="normal">ふつう</button>
+        <button type="button" data-diff="hard">むずかしい</button>
+      </div>
+      <p class="note">4歳なら「やさしい」がおすすめです。iPhone の下側（マイク）に向かって「ふーっ」と吹くと消えます。マイクが使えないときは、炎をタッチして消せます。</p>
+      <div class="btn-row" style="margin-top:12px">
+        <button type="button" class="btn sub" id="mic-test">マイクを試す</button>
+      </div>
+      <div class="meter-box" id="meter-box" hidden>
+        <div class="meter"><i id="meter-bar"></i><span class="gate" id="meter-gate"></span></div>
+        <div class="meter-text" id="meter-text">—</div>
+      </div>
+    </section>
+
+    <section>
+      <h3>音と声</h3>
+      <div class="toggle-row"><span>音楽と効果音</span><button type="button" class="switch" role="switch" id="sw-sound" aria-label="音楽と効果音"></button></div>
+      <div class="toggle-row"><span>雪だるまの声（読み上げ）</span><button type="button" class="switch" role="switch" id="sw-voice" aria-label="雪だるまの声"></button></div>
+      <div class="btn-row" style="margin-top:8px"><button type="button" class="btn sub" id="voice-test">声を試す</button></div>
+      <p class="note">声は iPhone の読み上げ機能を使います。はじめに「声を試す」で、話し終わるまで画面が固まらないことを確かめてからオンにしてください。音が出ないときは、iPhone の音量と消音モードを確認してください。</p>
+    </section>
+
+    <section>
+      <h3>iPhone での使い方</h3>
+      <ol class="howto">
+        <li>Safari でこのページを開き、共有ボタン →「ホーム画面に追加」</li>
+        <li>ホーム画面のアイコンから開くと、全画面で使えます</li>
+        <li>タイトル画面の右上 ⚙ を長押しして、写真を選びます</li>
+        <li>「はじめる」→ 歌のあと、マイクの使用を「許可」します</li>
+      </ol>
+    </section>
+
+    <section>
+      <h3>データ</h3>
+      <button type="button" class="btn danger" id="reset-all">写真と設定をすべて消す</button>
+    </section>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

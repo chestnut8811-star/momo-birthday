@@ -1,0 +1,6 @@
+# 作業用（公開しない）
+.claude/
+.playwright-mcp/
+tools/icon-build/
+.DS_Store
+node_modules/
