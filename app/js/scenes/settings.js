@@ -75,6 +75,10 @@ export function createSettings(app) {
     fill();
   });
   $('#voice-test').addEventListener('click', async () => {
+    if (!app.settings.sound) {
+      app.toast('「音」がオフになっています。オンにしてから試してください');
+      return;
+    }
     app.unlock();
     setVoiceEnabled(true); // 試すあいだだけ有効にする
     const ok = await speakLine('hello', app.settings);
@@ -87,11 +91,18 @@ export function createSettings(app) {
   fileIn.addEventListener('change', async () => {
     const files = [...fileIn.files];
     fileIn.value = '';
-    if (!files.length || busy) return;
+    if (!files.length) return;
+    if (busy) {
+      app.toast('いま取り込み中です。終わってからもう一度選んでください');
+      return;
+    }
     await importItems(files.map((blob) => ({ blob })));
   });
   $('#demo-photos').addEventListener('click', async () => {
-    if (busy) return;
+    if (busy) {
+      app.toast('いま取り込み中です。終わってからもう一度押してください');
+      return;
+    }
     busy = true;
     progressNote.hidden = false;
     progressNote.textContent = 'サンプル写真を作っています…';
@@ -137,7 +148,9 @@ export function createSettings(app) {
       cap.value = p.caption || '';
       cap.placeholder = 'ひとこと（例：はじめての ゆき）';
       cap.setAttribute('aria-label', `${i + 1}枚目のひとこと`);
-      cap.addEventListener('change', () => updateCaption(p.id, cap.value.trim()).catch(() => app.toast('保存できませんでした')));
+      const saveCap = () => updateCaption(p.id, cap.value.trim()).catch(() => app.toast('保存できませんでした'));
+      cap.addEventListener('input', saveCap);
+      cap.addEventListener('change', saveCap);
       const ops = document.createElement('div');
       ops.className = 'ops';
       const mk = (label, aria, fn, disabled = false, cls = '') => {
@@ -182,19 +195,22 @@ export function createSettings(app) {
       app.toast('このページではマイクを使えません（https で開いてください）');
       return;
     }
-    listener = new BlowListener({
+    const l = new BlowListener({
       difficulty: app.settings.difficulty,
       onFrame: (f) => {
         meterBar.style.width = `${Math.round(f.score * 100)}%`;
         meterText.textContent = `息の強さ ${Math.round(f.score * 100)}%　音量 ${f.levelDb.toFixed(0)} dB　低い音の割合 ${Math.round(f.lowRatio * 100)}%`;
       },
     });
+    listener = l;
+    micBtn.textContent = 'テストをやめる';
     try {
-      await listener.start();
+      await l.start();
+      if (listener !== l) return; // 待っているあいだに止められた
       meterBox.hidden = false;
-      micBtn.textContent = 'テストをやめる';
     } catch (e) {
-      listener = null;
+      if (listener === l) stopMic();
+      if (e?.name === 'AbortError') return;
       app.toast(e?.name === 'NotAllowedError' ? 'マイクが許可されていません（設定 → Safari → マイク）' : 'マイクを開始できませんでした');
     }
   });

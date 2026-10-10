@@ -22,7 +22,7 @@ function iconSVG({ maskable = false } = {}) {
   const ch = (cw * 400) / 360;
   const cx = 512 - cw / 2;
   const cy = 512 - ch / 2 + (maskable ? 10 : 30);
-  const cake = cakeSVG({ candles: 4, name: '♡' }).replace(/fill="transparent"/g, 'fill="none"');
+  const cake = cakeSVG({ candles: 4, name: '♡' });
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1024" height="1024" viewBox="0 0 1024 1024">
   <defs>
     <linearGradient id="ibg" x1="0" y1="0" x2="1" y2="1">

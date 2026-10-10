@@ -165,9 +165,16 @@ function show(name) {
   el.classList.add('entering');
 }
 
+// 新しい版が届いていたら、タイトルに戻るときに読み込み直す（当日まで古い版のまま使わないように）
+let reloadOnTitle = false;
+
 app.go = async (name, at) => {
   app.log(`go ${name}${busy ? ' (busy)' : ''}`);
   if (busy) return;
+  if (reloadOnTitle && name === 'title') {
+    location.reload();
+    return;
+  }
   busy = true;
   const p = at && Number.isFinite(at.x) && (at.x || at.y) ? at : { x: innerWidth / 2, y: innerHeight / 2 };
   sfx('whoosh');
@@ -262,6 +269,12 @@ scenes.title.enter();
 
 // オフライン用（https で公開したときだけ。開発中のキャッシュ混乱を避ける）
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || params.has('sw'))) {
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController) return; // はじめてのインストールでは読み込み直さない
+    if (current === scenes.title && $('#settings').hidden) location.reload();
+    else reloadOnTitle = true;
+  });
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
 

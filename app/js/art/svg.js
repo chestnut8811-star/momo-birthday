@@ -399,7 +399,6 @@ export function cakeSVG({ candles = 4, name = '' } = {}) {
           </g></g>
         </g>
       </g>
-      <rect class="hit" x="-22" y="-118" width="44" height="122" fill="transparent"/>
     </g>`;
   });
 

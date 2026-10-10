@@ -1,7 +1,7 @@
 // オフラインでも起動できるよう、アプリ本体だけをキャッシュする（写真は IndexedDB にあり、ここでは扱わない）
 // ファイルを更新して公開するときは VERSION を上げる
 
-const VERSION = 'momo-bday-v2';
+const VERSION = 'momo-bday-v3';
 const ASSETS = [
   './',
   'index.html',
@@ -63,7 +63,8 @@ self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k))))
+      // 同じ github.io のほかの公開物のキャッシュには触れない（このアプリの古い版だけ消す）
+      .then((keys) => Promise.all(keys.filter((k) => k.startsWith('momo-bday-') && k !== VERSION).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });

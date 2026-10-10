@@ -26,6 +26,12 @@ export function setSessionType(type) {
   }
 }
 
+// マイクを使っているあいだは録音モードのままにする（playback に戻すとマイクが止まるため）
+let captureActive = false;
+export function setCaptureActive(on) {
+  captureActive = !!on;
+}
+
 // iOS ではユーザーの操作の中で呼ぶ必要がある
 export function unlockAudio() {
   const AC = window.AudioContext || window.webkitAudioContext;
@@ -38,7 +44,7 @@ export function unlockAudio() {
     }
     build();
   }
-  setSessionType('playback');
+  if (!captureActive) setSessionType('playback');
   if (ctx.state !== 'running') ctx.resume().catch(() => {});
   try {
     const b = ctx.createBuffer(1, 1, ctx.sampleRate);

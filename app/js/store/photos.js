@@ -22,7 +22,13 @@ function openDB() {
     };
     req.onsuccess = () => {
       const db = req.result;
-      db.onversionchange = () => db.close();
+      db.onversionchange = () => {
+        db.close();
+        dbPromise = null;
+      };
+      db.onclose = () => {
+        dbPromise = null; // iOS で裏に回ったあとなどに閉じられたら、次に使うとき開き直す
+      };
       resolve(db);
     };
     req.onerror = () => reject(req.error);
@@ -32,6 +38,19 @@ function openDB() {
     dbPromise = null;
   });
   return dbPromise;
+}
+
+// トランザクションを始める。接続が閉じていたら開き直して1回だけやり直す
+async function txn(mode = 'readonly') {
+  for (let attempt = 0; ; attempt++) {
+    const db = await openDB();
+    try {
+      return db.transaction(STORE, mode);
+    } catch (e) {
+      dbPromise = null;
+      if (attempt >= 1 || e?.name !== 'InvalidStateError') throw e;
+    }
+  }
 }
 
 const request = (req) =>
@@ -48,31 +67,27 @@ const finished = (tx) =>
   });
 
 export async function listPhotos() {
-  const db = await openDB();
-  const all = await request(db.transaction(STORE).objectStore(STORE).getAll());
+  const all = await request((await txn()).objectStore(STORE).getAll());
   return all.sort((a, b) => a.order - b.order || a.createdAt - b.createdAt);
 }
 
 export async function countPhotos() {
   try {
-    const db = await openDB();
-    return await request(db.transaction(STORE).objectStore(STORE).count());
+    return await request((await txn()).objectStore(STORE).count());
   } catch {
     return 0;
   }
 }
 
 async function putAll(records) {
-  const db = await openDB();
-  const tx = db.transaction(STORE, 'readwrite');
+  const tx = await txn('readwrite');
   const store = tx.objectStore(STORE);
   for (const r of records) store.put(r);
   return finished(tx);
 }
 
 export async function updateCaption(id, caption) {
-  const db = await openDB();
-  const tx = db.transaction(STORE, 'readwrite');
+  const tx = await txn('readwrite');
   const store = tx.objectStore(STORE);
   const rec = await request(store.get(id));
   if (rec) store.put({ ...rec, caption });
@@ -80,15 +95,13 @@ export async function updateCaption(id, caption) {
 }
 
 export async function deletePhoto(id) {
-  const db = await openDB();
-  const tx = db.transaction(STORE, 'readwrite');
+  const tx = await txn('readwrite');
   tx.objectStore(STORE).delete(id);
   return finished(tx);
 }
 
 export async function clearPhotos() {
-  const db = await openDB();
-  const tx = db.transaction(STORE, 'readwrite');
+  const tx = await txn('readwrite');
   tx.objectStore(STORE).clear();
   return finished(tx);
 }

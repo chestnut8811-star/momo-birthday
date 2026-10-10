@@ -12,6 +12,7 @@ import { speakLine, cancelSpeech } from '../audio/voice.js';
 const MAX_MINIS = 18;
 
 export function createFinale(app) {
+  const root = $('#scene-finale');
   const heart = $('#heart-stage');
   const center = $('.heart-center', heart);
   const ageWord = $('#finale-age');
@@ -35,13 +36,16 @@ export function createFinale(app) {
     app.keepAwake(true);
     const s = app.settings;
     puffy(ageWord, `${s.age}さい`, 'ice');
-    letterBody.textContent = messageOf(s);
+    const msg = messageOf(s);
+    letterBody.textContent = msg;
+    letter.classList.toggle('long', [...msg].length > 90);
     letterFrom.textContent = s.from;
     letterFrom.hidden = !s.from;
     letter.style.animation = 'none';
     void letter.offsetWidth;
     letter.style.animation = '';
     actions.textContent = '';
+    root.scrollTop = 0;
 
     const photos = (await listPhotos().catch(() => [])).slice(0, MAX_MINIS);
     if (my !== token) return;
@@ -103,7 +107,7 @@ export function createFinale(app) {
     }, 600 + n * 110);
     await wait(1200 + n * 110);
     if (my !== token) return;
-    actions.appendChild(button({ label: 'もういちど ケーキ', icon: ICON.cake, cls: 'small', onClick: () => app.go('cake') }));
+    actions.appendChild(button({ label: 'もういちど', icon: ICON.cake, cls: 'small', onClick: () => app.go('cake'), aria: 'もういちど ケーキへ' }));
     actions.appendChild(button({ label: 'はじめから', icon: ICON.home, cls: 'ice small', onClick: () => app.go('title') }));
   }
 

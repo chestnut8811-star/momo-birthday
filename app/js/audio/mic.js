@@ -1,6 +1,6 @@
 // マイクで息を聞き取る。計算は logic/blow-score.js（Node でテスト済み）
 
-import { getCtx, setSessionType } from './engine.js';
+import { getCtx, setSessionType, setCaptureActive } from './engine.js';
 import { rmsDb, bandFeatures, blowScore, updateNoiseFloor } from '../logic/blow-score.js';
 
 export function micSupported() {
@@ -23,6 +23,8 @@ export class BlowListener {
     const ctx = getCtx();
     if (!ctx) throw new Error('no-audio');
     if (!micSupported()) throw new Error('unsupported');
+    this.stopped = false;
+    setCaptureActive(true);
     setSessionType('play-and-record');
     let stream;
     try {
@@ -32,8 +34,18 @@ export class BlowListener {
         video: false,
       });
     } catch (e) {
+      setCaptureActive(false);
       setSessionType('playback');
       throw e;
+    }
+    // 許可を待っているあいだに止められていたら、開いたマイクをすぐ閉じる
+    if (this.stopped) {
+      stream.getTracks().forEach((t) => t.stop());
+      setCaptureActive(false);
+      setSessionType('playback');
+      const err = new Error('stopped while starting');
+      err.name = 'AbortError';
+      throw err;
     }
     if (ctx.state !== 'running') {
       try { await ctx.resume(); } catch { /* 次のタッチで再開 */ }
@@ -84,6 +96,7 @@ export class BlowListener {
   }
 
   stop() {
+    this.stopped = true;
     this.running = false;
     cancelAnimationFrame(this.raf);
     try {
@@ -97,6 +110,7 @@ export class BlowListener {
       this.stream.getTracks().forEach((t) => t.stop());
       this.stream = null;
       // 録音モードのままだと iOS で音が小さくなるので戻す
+      setCaptureActive(false);
       setSessionType('playback');
     }
   }

@@ -32,6 +32,21 @@ export function createMemories(app) {
   let meltTimer = 0;
   let nextTimer = 0;
   const urls = [];
+  // こする音は場面に1つだけ。何本の指でこすっても、全部離したら止める
+  let rubSnd = null;
+  let rubFingers = 0;
+  const rubStart = () => {
+    if (++rubFingers === 1) rubSnd = rubSound();
+  };
+  const rubEnd = () => {
+    rubFingers = Math.max(0, rubFingers - 1);
+    if (rubFingers === 0) stopRub();
+  };
+  function stopRub() {
+    rubFingers = 0;
+    rubSnd?.stop();
+    rubSnd = null;
+  }
 
   nextBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -106,7 +121,7 @@ export function createMemories(app) {
     });
     bindRub(c);
     pol.addEventListener('pointerdown', () => {
-      if (c.revealed) scheduleNext();
+      if (c.revealed && card === c) scheduleNext(); // 見ているあいだは次へ進むのを待つ
     });
     return c;
   }
@@ -122,41 +137,38 @@ export function createMemories(app) {
     return { x: dx * Math.cos(a) - dy * Math.sin(a) + c.w / 2, y: dx * Math.sin(a) + dy * Math.cos(a) + c.h / 2 };
   }
 
+  // 指ごと（pointerId ごと）に前回の位置を覚えてこする。落ちてくる途中に置いた指も、着地したらそのまま消せる
   function bindRub(c) {
-    let down = false;
-    let last = null;
-    let lastT = 0;
-    let snd = null;
+    c.fingers = new Map();
     let sparkT = 0;
     c.canvas.addEventListener('pointerdown', (e) => {
-      if (c.revealed || !c.landed) return;
-      down = true;
+      if (c.revealed || c.fingers.has(e.pointerId)) return;
       try { c.canvas.setPointerCapture(e.pointerId); } catch { /* 古い端末 */ }
-      last = local(c, e);
-      lastT = performance.now();
-      c.eraser.stroke(last.x, last.y, last.x, last.y);
-      snd = rubSound();
+      const p = local(c, e);
+      c.fingers.set(e.pointerId, { ...p, t: performance.now() });
+      if (c.landed) c.eraser.stroke(p.x, p.y, p.x, p.y);
+      rubStart();
       touched();
     });
     c.canvas.addEventListener('pointermove', (e) => {
-      if (!down || c.revealed) return;
+      const last = c.fingers.get(e.pointerId);
+      if (!last || c.revealed) return;
       const p = local(c, e);
       const now = performance.now();
-      const speed = (Math.hypot(p.x - last.x, p.y - last.y) / Math.max(1, now - lastT)) * 1000;
-      c.eraser.stroke(last.x, last.y, p.x, p.y);
-      snd?.set(Math.min(1, speed / 900));
-      if (now - sparkT > 70) {
-        sparkT = now;
-        app.magic.sparkle(e.clientX, e.clientY, 3);
+      if (c.landed) {
+        const speed = (Math.hypot(p.x - last.x, p.y - last.y) / Math.max(1, now - last.t)) * 1000;
+        c.eraser.stroke(last.x, last.y, p.x, p.y);
+        rubSnd?.set(Math.min(1, speed / 900));
+        if (now - sparkT > 70) {
+          sparkT = now;
+          app.magic.sparkle(e.clientX, e.clientY, 3);
+        }
       }
-      last = p;
-      lastT = now;
+      c.fingers.set(e.pointerId, { ...p, t: now });
       touched();
     });
-    const end = () => {
-      down = false;
-      snd?.stop();
-      snd = null;
+    const end = (e) => {
+      if (c.fingers.delete(e.pointerId)) rubEnd();
     };
     c.canvas.addEventListener('pointerup', end);
     c.canvas.addEventListener('pointercancel', end);
@@ -170,10 +182,15 @@ export function createMemories(app) {
   async function reveal(c, spiral = false) {
     if (c.revealed) return;
     c.revealed = true;
+    const my = token;
     clearTimeout(meltTimer);
+    c.fingers?.clear();
+    stopRub();
     hint.classList.add('gone');
     sfx('reveal');
     if (spiral) await c.eraser.meltSpiral(900);
+    // 溶けているあいだに場面を出たり次の写真に進んだりしていたら、ここで終わる
+    if (my !== token || card !== c) return;
     c.canvas.classList.add('melted');
     c.pol.classList.add('revealed');
     const r = c.pol.getBoundingClientRect();
@@ -212,6 +229,7 @@ export function createMemories(app) {
 
   function next() {
     clearTimers();
+    stopRub();
     const old = card;
     card = null;
     if (old) {
@@ -236,9 +254,14 @@ export function createMemories(app) {
     btns.textContent = '';
     btns.appendChild(button({
       label: 'サンプルで みる', icon: ICON.heart, cls: 'small', onClick: async () => {
+        const my = token;
         btns.textContent = '';
+        const note = document.createElement('p');
+        note.className = 'say';
+        note.textContent = 'サンプルを つくっているよ…';
+        btns.appendChild(note);
         await app.addDemoPhotos();
-        enter();
+        if (my === token) enter(); // 作っているあいだに場面を出ていたら始めない
       },
     }));
     btns.appendChild(button({ label: 'もどる', icon: ICON.home, cls: 'ice small', onClick: () => app.go('title') }));
@@ -280,6 +303,7 @@ export function createMemories(app) {
 
   function cleanup() {
     clearTimers();
+    stopRub();
     stageEl.textContent = '';
     card = null;
     while (urls.length) URL.revokeObjectURL(urls.pop());
@@ -288,6 +312,8 @@ export function createMemories(app) {
   function exit() {
     token++;
     cleanup();
+    photos = [];
+    idx = -1;
     cancelSpeech();
     stopSong(0.5);
     title.hidden = true;

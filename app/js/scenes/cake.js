@@ -72,9 +72,6 @@ export function createCake(app) {
     leanEls = candleEls.map((el) => $('.flame-lean', el));
     warmEl = $('.cake-warm', stage);
     dirs = candleEls.map((_, i) => (i % 2 ? 1 : -1) * (0.7 + Math.random() * 0.6));
-    candleEls.forEach((el, i) => {
-      $('.hit', el).addEventListener('pointerdown', (e) => onTapCandle(e, i));
-    });
   }
 
   function updateWarm() {
@@ -125,13 +122,29 @@ export function createCake(app) {
     }
   }
 
-  function onTapCandle(e, i) {
-    if (state !== 'blow' || !candles[i] || candles[i].done) return;
+  // 炎や光の円は重なっているので、要素ではなく「タップ位置にいちばん近い、点いている炎」で決める。
+  // 縦方向は甘めにして、ロウソクの胴を触っても消えるようにする
+  function onTapStage(e) {
+    if (state !== 'blow') return;
+    let best = -1;
+    let bestD = Infinity;
+    candles.forEach((c, i) => {
+      if (c.done || !c.lit) return;
+      const p = flamePoint(i);
+      const d = Math.hypot(e.clientX - p.x, (e.clientY - p.y) * 0.55);
+      if (d < bestD) {
+        bestD = d;
+        best = i;
+      }
+    });
+    const limit = Math.max(40, stage.getBoundingClientRect().width * 0.12);
+    if (best < 0 || bestD > limit) return;
     e.stopPropagation();
-    const p = flamePoint(i);
+    const p = flamePoint(best);
     app.magic.sparkle(p.x, p.y, 12);
-    extinguish(i);
+    extinguish(best);
   }
+  stage.addEventListener('pointerdown', onTapStage);
 
   function spawnNote() {
     const n = document.createElement('div');
@@ -257,26 +270,28 @@ export function createCake(app) {
     hintTimer = setTimeout(() => {
       if (my === token && state === 'blow' && !listener?.running) say(LINES.tapHint());
     }, 5000);
+    const l = new BlowListener({ difficulty: app.settings.difficulty, onFrame });
+    listener = l;
     try {
       if (app.debugSim) {
         fake = fake || createFakeBreath();
         app.fakeBreath = fake;
-        listener = new BlowListener({ difficulty: app.settings.difficulty, onFrame });
-        listener.attach(fake.node);
+        l.attach(fake.node);
       } else {
         if (!micSupported()) throw new Error('unsupported');
-        listener = new BlowListener({ difficulty: app.settings.difficulty, onFrame });
-        await listener.start();
+        await l.start();
       }
     } catch (e) {
+      if (listener === l) listener = null;
+      l.stop();
+      if (e?.name === 'AbortError') return; // 待っているあいだに止めた（全部消えた・場面を出た など）
       console.info('マイクを使えないため、タッチで消す方法に切り替えます', e?.name || e);
-      listener?.stop();
-      listener = null;
       if (my === token && state === 'blow') say(LINES.tapHint(), { voice: 'tapHint' });
       return;
     }
-    if (my !== token || state !== 'blow') {
-      stopListening();
+    if (listener !== l || my !== token || state !== 'blow') {
+      l.stop();
+      if (listener === l) listener = null;
       return;
     }
     chip.hidden = false;

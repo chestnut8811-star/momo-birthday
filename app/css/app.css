@@ -461,7 +461,7 @@ img, svg { -webkit-user-drag: none; user-select: none; }
 }
 .cake-stage .cake { width: min(92vw, 46vh, 460px); height: auto; overflow: visible; }
 .cake .plate-text { font-family: var(--font); }
-.cake .candle .hit { cursor: pointer; pointer-events: all; }
+.cake-stage { cursor: pointer; }
 .cake .flame { transform-box: fill-box; transform-origin: 50% 85%; transition: opacity .28s ease, transform .28s ease; }
 .cake .flame-lean { transform-box: fill-box; transform-origin: 50% 100%; }
 .cake .flicker { transform-box: fill-box; transform-origin: 50% 100%; animation: flicker .22s ease-in-out infinite alternate; }
@@ -620,7 +620,7 @@ img, svg { -webkit-user-drag: none; user-select: none; }
 .mem-empty {
   position: absolute;
   inset: 0;
-  z-index: 10;
+  z-index: 7;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -634,8 +634,8 @@ img, svg { -webkit-user-drag: none; user-select: none; }
 .mem-empty .parent { margin: 0; max-width: 320px; color: #fff; font-size: 13px; line-height: 1.6; }
 
 /* ---------- フィナーレ ---------- */
-#scene-finale { justify-content: flex-start; }
-.heart-stage { position: relative; z-index: 3; width: min(94vw, 44vh, 460px); aspect-ratio: 1 / .9; margin-top: 2px; flex: 0 0 auto; }
+#scene-finale { justify-content: flex-start; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y; }
+.heart-stage { position: relative; z-index: 3; width: min(94vw, 40vh, 460px); aspect-ratio: 1 / .9; margin-top: 2px; flex: 0 0 auto; }
 .heart-center {
   position: absolute;
   left: 50%;
@@ -685,7 +685,9 @@ img, svg { -webkit-user-drag: none; user-select: none; }
 .letter-body { position: relative; margin: 0; white-space: pre-wrap; font-size: clamp(15px, 4.4vw, 19px); line-height: 1.75; }
 .letter-from { position: relative; margin: 8px 0 0; text-align: right; color: var(--ink-soft); font-size: clamp(14px, 4vw, 17px); }
 @keyframes letter-in { from { opacity: 0; transform: translateY(40px) scale(.9); } to { opacity: 1; transform: none; } }
-#scene-finale .actions { margin-top: auto; }
+#scene-finale .actions { margin-top: auto; padding-top: 12px; gap: 10px; }
+#scene-finale .actions .candy-btn { padding: 0 14px; font-size: 18px; }
+.letter.long .letter-body { font-size: clamp(14px, 3.9vw, 17px); line-height: 1.6; }
 
 /* ---------- 場面転換（雪のワイプ） ---------- */
 #wipe {
