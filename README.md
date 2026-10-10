@@ -2,6 +2,10 @@
 
 4さいの誕生日をお祝いする、雪の王国の Web アプリです。iPhone の Safari、またはホーム画面に追加して全画面で使います。
 
+公開先: https://chestnut8811-star.github.io/momo-birthday/
+
+![画面の一覧](docs/screenshots.png)
+
 ## できること
 
 | 場面 | 内容 |
