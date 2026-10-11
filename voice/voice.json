@@ -1,0 +1,82 @@
+{
+  "credit": "VOICEVOX:ずんだもん",
+  "speaker": 1,
+  "engine": "0.25.2",
+  "name": "ももちゃん",
+  "age": 4,
+  "lines": {
+    "hello": {
+      "needs": [
+        "name",
+        "age"
+      ],
+      "fallback": "hello_g",
+      "file": "hello.m4a",
+      "kana": "モモチャン'、ヨン'サイノ、オタンジョ'オビ、オメデトオ'"
+    },
+    "hello_g": {
+      "file": "hello_g.m4a",
+      "kana": "オタンジョ'オビ、オメデトオ'"
+    },
+    "sing": {
+      "file": "sing.m4a",
+      "kana": "マ'ズワ、ミンナ'デ、オ'ウタオ、ウタオオ'"
+    },
+    "blow": {
+      "file": "blow.m4a",
+      "kana": "サ'ア、ロオソ'クオ、フ'ウッテ、ケ_シテネ'"
+    },
+    "again": {
+      "file": "again.m4a",
+      "kana": "モ'オ/イッカイ'、フ'ウッテ、_シテネ'"
+    },
+    "allOut": {
+      "file": "allOut.m4a",
+      "kana": "ヤッタ'ア、ゼ'ンブ、キエタ'ヨ、オメデトオ'"
+    },
+    "tapHint": {
+      "file": "tapHint.m4a",
+      "kana": "ヒ'オ、タ'ッチ/_シテモ'、ケセルヨ'"
+    },
+    "toMemories": {
+      "needs": [
+        "name"
+      ],
+      "fallback": "toMemories_g",
+      "file": "toMemories.m4a",
+      "kana": "モモチャンノ'、オモイデオ'、ミ'テ/ミ'ヨオ"
+    },
+    "toMemories_g": {
+      "file": "toMemories_g.m4a",
+      "kana": "オモイデオ'、ミ'テ/ミ'ヨオ"
+    },
+    "memTitle": {
+      "needs": [
+        "name"
+      ],
+      "fallback": "memTitle_g",
+      "file": "memTitle.m4a",
+      "kana": "モモチャンノ'、オモイデダヨ'"
+    },
+    "memTitle_g": {
+      "file": "memTitle_g.m4a",
+      "kana": "タノシ'イ、オモイデダヨ'"
+    },
+    "rub": {
+      "file": "rub.m4a",
+      "kana": "コ'オリオ、コス'ッテ、ミ'テネ"
+    },
+    "finale": {
+      "needs": [
+        "name"
+      ],
+      "fallback": "finale_g",
+      "file": "finale.m4a",
+      "kana": "モモチャン'、ダ'イ_スキダヨ、オタンジョ'オビ、オメデトオ'"
+    },
+    "finale_g": {
+      "file": "finale_g.m4a",
+      "kana": "ダ'イ_スキダヨ、オタンジョ'オビ、オメデトオ'"
+    }
+  }
+}
