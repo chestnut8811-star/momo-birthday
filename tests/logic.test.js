@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  sanitizeSettings, DEFAULT_SETTINGS, honSuffix, messageOf, defaultMessage, LINES, VOICE_KIND,
+  sanitizeSettings, DEFAULT_SETTINGS, honSuffix, messageOf, defaultMessage, letterParagraphs, LINES, VOICE_KIND, LETTER_KIND,
 } from '../app/js/logic/config.js';
 import {
   rmsDb, bandFeatures, blowScore, updateNoiseFloor, createCandles, stepCandles, GATE,
@@ -40,11 +40,31 @@ test('設定: 声は既定でオン。読み上げ時代に保存された「オ
   assert.equal(sanitizeSettings({ voice: false, voiceKind: VOICE_KIND }).voice, false);
 });
 
-test('メッセージ: 空なら名前と年齢入りの既定文', () => {
+test('メッセージ: 空なら名前と年齢入りの手紙', () => {
   const s = sanitizeSettings({ name: 'ももちゃん', age: 4 });
   assert.equal(messageOf(s), defaultMessage('ももちゃん', 4));
-  assert.match(messageOf(s), /ももちゃん、4さい/);
+  assert.match(messageOf(s), /^ももちゃんへ\n\n4さいの おたんじょうび、おめでとう！/);
+  assert.match(defaultMessage('はなちゃん', 5), /はなちゃんの 5さいの一年が/);
   assert.equal(messageOf({ ...s, message: '  だいすき  ' }), 'だいすき');
+});
+
+test('手紙の段落: 空行で分け、❄ のある段落だけが雪の魔法の段落', () => {
+  const ps = letterParagraphs(defaultMessage('ももちゃん', 4));
+  assert.equal(ps.length, 11);
+  assert.deepEqual(ps.filter((p) => p.magic).map((p) => p.text), ['❄️ キラキラ キラキラ…… ❄️']);
+  assert.deepEqual(letterParagraphs('あ\n\n\n い\nう\n \n'), [
+    { text: 'あ', magic: false },
+    { text: ' い\nう', magic: false },
+  ]);
+});
+
+test('差出人: 初期値は手紙の差出人。前の版で保存された初期値「みんなより」だけ置きかえる', () => {
+  assert.equal(DEFAULT_SETTINGS.from, 'エルサより ❄️');
+  assert.equal(sanitizeSettings({ from: 'みんなより' }).from, 'エルサより ❄️');
+  assert.equal(sanitizeSettings({ from: 'みんなより', letterKind: LETTER_KIND }).from, 'みんなより');
+  assert.equal(sanitizeSettings({ from: 'ママより' }).from, 'ママより');
+  assert.equal(sanitizeSettings({ from: '', letterKind: LETTER_KIND }).from, '');
+  assert.equal(sanitizeSettings(sanitizeSettings({ from: 'みんなより', letterKind: LETTER_KIND })).from, 'みんなより');
 });
 
 test('ロウソクの数え方', () => {

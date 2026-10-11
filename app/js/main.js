@@ -25,6 +25,7 @@ const app = {
   settings: loadSettings(),
   debug: params.has('debug'),
   debugSim: params.has('debug') && params.has('sim'),
+  reduced, // 視差効果を減らす設定（動きを控えめにする）
 };
 
 // ?debug のときだけ、画面の隅にエラーと操作の記録を出す（iPhone では開発者ツールが見られないため）

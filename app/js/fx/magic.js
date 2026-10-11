@@ -2,6 +2,8 @@
 
 const SPARK_COLORS = ['#FFFFFF', '#FFFFFF', '#BFE6FF', '#E3D6FF', '#FFD0DC', '#FFF0B8'];
 const CONFETTI_COLORS = ['#FF9EB1', '#FFC2D2', '#8FD3FF', '#BFE6FF', '#C3ADFF', '#E3D6FF', '#8FE3C8', '#FFD27A', '#FFFFFF'];
+// 雪の結晶の粒（白い手紙の上でも見えるよう、氷とラベンダーの濃いめの色）
+const FLAKE_COLORS = ['#5FA8EC', '#7FC4F5', '#8F74E8', '#B59CFF', '#F2759A'];
 
 const pick = (a) => a[(Math.random() * a.length) | 0];
 const rnd = (a, b) => a + Math.random() * (b - a);
@@ -21,6 +23,23 @@ function heartPath(g, r) {
   g.bezierCurveTo(-r * 1.4, -r * 0.1, -r * 0.7, -r * 1.2, 0, -r * 0.45);
   g.bezierCurveTo(r * 0.7, -r * 1.2, r * 1.4, -r * 0.1, 0, r * 0.9);
   g.closePath();
+}
+// 6本の腕と小枝の雪の結晶（線で描く）
+function flakePath(g, r) {
+  g.beginPath();
+  for (let k = 0; k < 6; k++) {
+    const a = (k * Math.PI) / 3;
+    const c = Math.cos(a);
+    const s = Math.sin(a);
+    g.moveTo(0, 0);
+    g.lineTo(c * r, s * r);
+    const bx = c * r * 0.55;
+    const by = s * r * 0.55;
+    for (const d of [0.75, -0.75]) {
+      g.moveTo(bx, by);
+      g.lineTo(bx + Math.cos(a + d) * r * 0.33, by + Math.sin(a + d) * r * 0.33);
+    }
+  }
 }
 function sparklePath(g, r) {
   g.beginPath();
@@ -91,6 +110,26 @@ export function createMagic(canvas) {
         }
         ctx.fill();
         ctx.restore();
+      } else if (p.kind === 'flake') {
+        // 雪の結晶: はじけたあと、ゆらゆら少しだけ落ちて消える
+        p.vx *= 1 - Math.min(1, dt * 2.4);
+        p.vy = p.vy * (1 - Math.min(1, dt * 2.4)) + 28 * dt;
+        p.phase += dt * 2.2;
+        p.x += (p.vx + Math.sin(p.phase) * 12) * dt;
+        p.y += p.vy * dt;
+        p.rot += p.vr * dt;
+        const t = p.age / p.life;
+        if (t >= 1) { parts.splice(i, 1); continue; }
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.globalAlpha = t < 0.15 ? t / 0.15 : 1 - (t - 0.15) / 0.85;
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = Math.max(1.2, p.size * 0.2);
+        ctx.lineCap = 'round';
+        flakePath(ctx, p.size);
+        ctx.stroke();
+        ctx.restore();
       } else {
         // 紙吹雪: 重力＋空気抵抗＋ひらひら
         p.vy += 520 * dt;
@@ -157,6 +196,19 @@ export function createMagic(canvas) {
           x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 30,
           size: rnd(4, 9) * (spread > 1 ? 1.2 : 1), color: pick(SPARK_COLORS),
           rot: rnd(0, 1), vr: rnd(-3, 3), age: 0, life: rnd(0.55, 1.1),
+        });
+      }
+      kick();
+    },
+    // 雪の結晶をはじけさせる（手紙の上の雪の魔法）
+    snowflakes(x, y, n = 8, power = 1) {
+      for (let i = 0; i < n; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const v = rnd(50, 200) * power;
+        parts.push({
+          kind: 'flake', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 40 * power,
+          size: rnd(5, 10) * (power > 1 ? 1.25 : 1), color: pick(FLAKE_COLORS),
+          rot: rnd(0, Math.PI), vr: rnd(-2.5, 2.5), phase: rnd(0, 6), age: 0, life: rnd(1.1, 1.9),
         });
       }
       kick();

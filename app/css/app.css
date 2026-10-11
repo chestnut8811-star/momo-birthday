@@ -722,6 +722,27 @@ img, svg { -webkit-user-drag: none; user-select: none; }
 #scene-finale .actions { margin-top: auto; padding-top: 12px; gap: 10px; }
 #scene-finale .actions .candy-btn { padding: 0 14px; font-size: 18px; }
 .letter.long .letter-body { font-size: clamp(14px, 3.9vw, 17px); line-height: 1.6; }
+/* 手紙: 段落ごとに雪の魔法で浮かび上がる（finale.js が画面に入った段落に .shown を付ける） */
+.letter-body .lp { display: block; opacity: 0; filter: blur(5px); transform: translateY(8px); transition: opacity .9s ease, filter .9s ease, transform .9s cubic-bezier(.2, 1.2, .4, 1); }
+.letter-body .lp + .lp { margin-top: .75em; }
+.letter-body .lp.magic { margin: 1em 0; font-size: 1.14em; letter-spacing: .03em; }
+.letter-from { opacity: 0; transition: opacity 1s ease; }
+.letter-body .lp.shown, .letter-from.shown { opacity: 1; filter: none; transform: none; }
+.lflake { display: inline-block; width: 1.05em; height: 1.05em; margin: 0 .12em; vertical-align: -.17em; color: var(--ice-deep); }
+.lflake .flake { display: block; width: 100%; height: 100%; animation: spin 9s linear infinite; }
+.lp.magic .lflake { color: var(--lilac-deep); }
+.lp.magic .lflake .flake { animation: spin 3s linear infinite, lflake-twinkle 1.1s ease-in-out infinite alternate; }
+.lp.magic .kira {
+  background: linear-gradient(100deg, var(--ice-deep) 0%, var(--lilac-deep) 25%, var(--peach-deep) 50%, var(--lilac-deep) 75%, var(--ice-deep) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: kira-sweep 2.6s linear infinite;
+}
+@keyframes lflake-twinkle { from { opacity: .55; scale: .82; } to { opacity: 1; scale: 1.12; } }
+@keyframes kira-sweep { to { background-position: -200% 0; } }
 
 /* ---------- 場面転換（雪のワイプ） ---------- */
 #wipe {
@@ -886,6 +907,12 @@ img, svg { -webkit-user-drag: none; user-select: none; }
   #scene-finale .topbar { grid-column: 1 / -1; }
   .heart-stage { grid-column: 1; grid-row: 2 / 4; width: min(46vw, 80vh); }
   .letter { grid-column: 2; grid-row: 2; width: 100%; margin-top: 0; }
+  /* 長い手紙は、カードの高さを画面に収めて中だけスクロールする（なかまの絵は外側に残す） */
+  .letter { display: flex; flex-direction: column; max-height: 100%; min-height: 0; }
+  .letter-scroll { position: relative; flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y; }
+  /* なかまは小さめにして、右のなかまは音のボタンの下からずらす */
+  .char-letter { top: -50px; width: 64px; height: 64px; }
+  .char-letter.right { right: 56px; }
   .letter-body { font-size: 15px; line-height: 1.6; }
   #scene-finale .actions { grid-column: 2; grid-row: 3; margin-top: 0; }
 }
@@ -894,5 +921,7 @@ img, svg { -webkit-user-drag: none; user-select: none; }
 @media (prefers-reduced-motion: reduce) {
   .aurora .band, .puffy-word .ch, .num-wrap .bignum, .tiara-wrap .tiara, .heart-center .tiara,
   .char-float, .snowman .sm-body, .snowman .arm-l, .candy-btn.breathe, .round-btn.breathe, .rub-hint .hand,
-  .twinkle, .star, .castle .window, #wipe .wipe-flake .flake { animation: none !important; }
+  .twinkle, .star, .castle .window, #wipe .wipe-flake .flake,
+  .lflake .flake, .lp.magic .kira { animation: none !important; }
+  .letter-body .lp, .letter-from { transition: none; filter: none; transform: none; }
 }
