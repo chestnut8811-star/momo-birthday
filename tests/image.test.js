@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { hasTransparency, borderColor, removeBackground, alphaBounds } from '../app/js/logic/image.js';
+import { hasTransparency, borderColor, borderUniformity, cutoutBackground, removeBackground, alphaBounds } from '../app/js/logic/image.js';
 
 // 白い背景の中央に赤い四角（キャラクターの代わり）
 function makeImage(w, h, { bg = [255, 255, 255, 255], box = [10, 10, 20, 30], fg = [220, 40, 60, 255] } = {}) {
@@ -45,4 +45,46 @@ test('背景の除去: キャラクターの中の白（縁とつながってい
 
 test('不透明部分の四角: 何もなければ全体', () => {
   assert.deepEqual(alphaBounds(makeImage(8, 6, { bg: [0, 0, 0, 0], box: [0, 0, 0, 0] })), { x: 0, y: 0, w: 8, h: 6 });
+});
+
+// 写真の代わり: 上から下へ明るさが変わる壁の前に人物（四角）
+function makePhoto(w = 60, h = 80) {
+  const data = new Uint8ClampedArray(w * h * 4);
+  for (let y = 0; y < h; y++) {
+    const t = y / (h - 1);
+    for (let x = 0; x < w; x++) {
+      const inside = x >= 20 && x < 40 && y >= 15 && y < 75;
+      const c = inside ? [235, 225, 240] : [215 - 110 * t, 205 - 110 * t, 195 - 110 * t].map(Math.round);
+      data.set([...c, 255], (y * w + x) * 4);
+    }
+  }
+  return { data, width: w, height: h };
+}
+const opaqueCount = (img) => {
+  let c = 0;
+  for (let i = 3; i < img.data.length; i += 4) if (img.data[i] > 12) c++;
+  return c;
+};
+
+test('縁の一色らしさ: 白い背景は 1、明るさが変わる壁の写真は低い', () => {
+  assert.equal(borderUniformity(makeImage(40, 50)), 1);
+  assert.ok(borderUniformity(makePhoto()) < 0.85, String(borderUniformity(makePhoto())));
+});
+
+test('背景を消すかの判断: 白い背景のキャラクターだけ消す', () => {
+  const ill = makeImage(40, 50);
+  assert.equal(cutoutBackground(ill), 'removed');
+  assert.equal(ill.data[3], 0);
+  assert.equal(ill.data[(25 * 40 + 20) * 4 + 3], 255);
+
+  const photo = makePhoto();
+  const before = photo.data.slice();
+  assert.equal(cutoutBackground(photo), 'photo');
+  assert.deepEqual(photo.data, before); // 写真は1画素も変えない
+
+  const flat = makeImage(30, 30, { box: [0, 0, 0, 0] }); // 全面が白
+  assert.equal(cutoutBackground(flat), 'empty');
+  assert.equal(opaqueCount(flat), 30 * 30); // 消さずに元のまま
+
+  assert.equal(cutoutBackground(makeImage(40, 50, { bg: [0, 0, 0, 0] })), 'transparent');
 });

@@ -34,6 +34,48 @@ export function borderColor(img) {
   return [med(rs), med(gs), med(bs)];
 }
 
+// 縁の画素のうち、背景色（縁の中央値）に近いものの割合。1 に近いほど、まわりが一色の背景
+export function borderUniformity(img, tol = 40) {
+  const { data, width: w, height: h } = img;
+  const [br, bg, bb] = borderColor(img);
+  let near = 0;
+  let n = 0;
+  const check = (x, y) => {
+    const i = (y * w + x) * 4;
+    const dr = data[i] - br;
+    const dg = data[i + 1] - bg;
+    const db = data[i + 2] - bb;
+    n++;
+    if (dr * dr + dg * dg + db * db <= tol * tol) near++;
+  };
+  for (let x = 0; x < w; x++) {
+    check(x, 0);
+    check(x, h - 1);
+  }
+  for (let y = 1; y < h - 1; y++) {
+    check(0, y);
+    check(w - 1, y);
+  }
+  return n ? near / n : 0;
+}
+
+// キャラクター画像の背景を、消してよいときだけ消す。戻り値は何をしたか
+// - 'transparent': もともと透明な背景 → そのまま
+// - 'photo': 縁の色がばらつく（写真など） → まだらに抜けるので消さない
+// - 'empty': 消すとほとんど何も残らない（全面が同じ色など） → 元にもどす
+// - 'removed': 背景を消した
+export function cutoutBackground(img, { minUniform = 0.85, minKeep = 0.03 } = {}) {
+  if (hasTransparency(img)) return 'transparent';
+  if (borderUniformity(img) < minUniform) return 'photo';
+  const before = img.data.slice();
+  const removed = removeBackground(img);
+  if (1 - removed < minKeep) {
+    img.data.set(before);
+    return 'empty';
+  }
+  return 'removed';
+}
+
 // 縁から、背景色に近い色でつながっている部分を透明にする（白い背景などを消す）。
 // tol より近ければ完全に透明、feather までは半透明にして輪郭をなめらかにする。
 // 戻り値は消した画素の割合

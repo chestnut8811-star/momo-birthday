@@ -49,9 +49,9 @@
 
 ## データモデル
 
-- 設定（localStorage `momo-bday:settings`）: `{ name, age(1-10), message, from, difficulty('easy'|'normal'|'hard'), sound, voice }`。message が空なら名前と年齢から自動生成
+- 設定（localStorage `momo-bday:settings`）: `{ name, age(1-10), message, from, difficulty('easy'|'normal'|'hard'、初期値 normal), sound, voice, voiceKind, letterKind, difficultyKind }`。message が空なら名前と年齢から自動生成。*Kind は初期値を変えたときの目印で、目印のない古い保存値のうち当時の初期値（voice:false・from「みんなより」・difficulty easy）だけを今の初期値に置きかえる
 - 写真（IndexedDB `momo-bday` v2 / store `photos`, keyPath `id`）: `{ id, data: ArrayBuffer, thumb, type, w, h, caption, order, createdAt }`
-- キャラクターの差し替え（同 DB / store `chars`, keyPath `slot`）: `{ slot: main|cheer|friend1|friend2, data: ArrayBuffer(PNG), type, w, h, updatedAt }`。無ければ `app/img/chars/*.webp`（同梱のオリジナル）を使う。取り込み時に白い背景を縁から消し、余白を詰める（`logic/image.js`、Node でテスト）
+- キャラクターの差し替え（同 DB / store `chars`, keyPath `slot`）: `{ slot: main|cheer|friend1|friend2, data: ArrayBuffer(PNG), type, w, h, updatedAt }`。無ければ `app/img/chars/*.webp`（同梱のオリジナル）を使う。取り込み時、縁の色がほぼ一色（縁の85%以上が背景色に近い）なら背景を縁から消し、余白を詰める。縁の色がばらつく写真や、消すとほとんど何も残らない画像は消さずにそのまま使う（`logic/image.js` の `cutoutBackground`、Node でテスト）
 
 ## 主要な処理フロー
 

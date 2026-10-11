@@ -1,7 +1,7 @@
 // オフラインでも起動できるよう、アプリ本体だけをキャッシュする（写真は IndexedDB にあり、ここでは扱わない）
 // ファイルを更新して公開するときは VERSION を上げる
 
-const VERSION = 'momo-bday-v5';
+const VERSION = 'momo-bday-v6';
 const ASSETS = [
   './',
   'index.html',

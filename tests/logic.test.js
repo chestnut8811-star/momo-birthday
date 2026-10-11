@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  sanitizeSettings, DEFAULT_SETTINGS, honSuffix, messageOf, defaultMessage, letterParagraphs, LINES, VOICE_KIND, LETTER_KIND,
+  sanitizeSettings, DEFAULT_SETTINGS, honSuffix, messageOf, defaultMessage, letterParagraphs, LINES, VOICE_KIND, LETTER_KIND, DIFFICULTY_KIND,
 } from '../app/js/logic/config.js';
 import {
   rmsDb, bandFeatures, blowScore, updateNoiseFloor, createCandles, stepCandles, GATE,
@@ -29,7 +29,7 @@ test('設定: 年齢は 1〜10 に丸め、名前は空白を除いて上限で�
 
 test('設定: 不正な難易度や型は無視する', () => {
   const s = sanitizeSettings({ difficulty: 'extreme', sound: 'yes', voice: false, voiceKind: VOICE_KIND });
-  assert.equal(s.difficulty, 'easy');
+  assert.equal(s.difficulty, 'normal');
   assert.equal(s.sound, true);
   assert.equal(s.voice, false);
 });
@@ -56,6 +56,14 @@ test('手紙の段落: 空行で分け、❄ のある段落だけが雪の魔�
     { text: 'あ', magic: false },
     { text: ' い\nう', magic: false },
   ]);
+});
+
+test('消えやすさ: 初期値は「ふつう」。前の版で保存された初期値「やさしい」だけ置きかえる', () => {
+  assert.equal(DEFAULT_SETTINGS.difficulty, 'normal');
+  assert.equal(sanitizeSettings({ difficulty: 'easy' }).difficulty, 'normal');
+  assert.equal(sanitizeSettings({ difficulty: 'easy', difficultyKind: DIFFICULTY_KIND }).difficulty, 'easy');
+  assert.equal(sanitizeSettings({ difficulty: 'hard' }).difficulty, 'hard');
+  assert.equal(sanitizeSettings(sanitizeSettings({ difficulty: 'easy', difficultyKind: DIFFICULTY_KIND })).difficulty, 'easy');
 });
 
 test('差出人: 初期値は手紙の差出人。前の版で保存された初期値「みんなより」だけ置きかえる', () => {

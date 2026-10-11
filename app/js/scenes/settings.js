@@ -249,10 +249,15 @@ export function createSettings(app) {
     busy = true;
     app.toast('画像を準備しています…');
     try {
-      await setCustomChar(charSlot, file);
+      const mode = await setCustomChar(charSlot, file);
       await loadCharacters();
       renderChars();
-      app.toast('キャラクターの画像を入れました');
+      app.toast(
+        mode === 'removed' ? '背景を消して、キャラクターの画像を入れました'
+          : mode === 'photo' ? '写真のまま入れました（まわりが白など一色の画像なら、背景を消します）'
+            : mode === 'empty' ? '背景を消すと何も残らないので、そのまま入れました'
+              : 'キャラクターの画像を入れました',
+      );
     } catch {
       app.toast('画像を読み込めませんでした');
     } finally {
@@ -301,15 +306,30 @@ export function createSettings(app) {
 
   // ---------- 全消去 ----------
   $('#reset-all').addEventListener('click', async () => {
+    // 取り込みの途中で消すと、取り込みが終わったあとに画像が残ってしまう
+    if (busy) {
+      app.toast('いま取り込み中です。終わってから、もう一度押してください');
+      return;
+    }
     if (!window.confirm('写真・キャラクター画像・設定をすべて消して、最初の状態に戻します。よろしいですか？')) return;
-    await clearPhotos().catch(() => {});
-    await clearCustomChars().catch(() => {});
+    busy = true;
+    let ok = true;
+    try {
+      await clearPhotos();
+      await clearCustomChars();
+    } catch {
+      ok = false;
+    } finally {
+      busy = false;
+    }
     await loadCharacters();
-    app.resetSettings();
-    fill();
+    if (ok) {
+      app.resetSettings();
+      fill();
+    }
     renderPhotos();
     renderChars();
-    app.toast('すべて消しました');
+    app.toast(ok ? 'すべて消しました' : '消せませんでした。アプリを開き直して、もう一度ためしてください');
   });
 
   // ---------- 開く・閉じる ----------

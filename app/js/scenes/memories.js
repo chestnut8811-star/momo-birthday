@@ -22,6 +22,10 @@ export function createMemories(app) {
   const hint = $('#rub-hint');
   const nextBtn = $('#btn-next');
   const empty = $('#mem-empty');
+  const emptySay = $('.say', empty);
+  const emptyParent = $('.parent', empty);
+  const EMPTY_SAY = emptySay.textContent;
+  const EMPTY_PARENT = emptyParent.textContent;
   const titleChars = $('#mem-title-chars');
 
   nextBtn.innerHTML = ICON.next;
@@ -247,13 +251,23 @@ export function createMemories(app) {
     show(idx + 1);
   }
 
-  function showEmpty() {
+  // failed: 写真の保存場所を開けなかった（写真が0枚なのとは違うので、開き直しを案内する）
+  function showEmpty(failed = false) {
     empty.hidden = false;
     progress.textContent = '';
     hint.hidden = true;
     nextBtn.hidden = true;
+    emptySay.textContent = failed ? 'しゃしんを よみこめなかったよ' : EMPTY_SAY;
+    emptyParent.textContent = failed
+      ? 'おうちのかたへ：写真を読み込めませんでした。「ひらきなおす」を押してください。直らないときは、このアプリをほかのタブでも開いていないか確かめて、閉じてから開き直してください。'
+      : EMPTY_PARENT;
     const btns = $('.btns', empty);
     btns.textContent = '';
+    if (failed) {
+      btns.appendChild(button({ label: 'ひらきなおす', icon: ICON.next, cls: 'small', onClick: () => location.reload() }));
+      btns.appendChild(button({ label: 'もどる', icon: ICON.home, cls: 'ice small', onClick: () => app.go('title') }));
+      return;
+    }
     btns.appendChild(button({
       label: 'サンプルで みる', icon: ICON.heart, cls: 'small', onClick: async () => {
         const my = token;
@@ -273,10 +287,14 @@ export function createMemories(app) {
     const my = ++token;
     cleanup();
     app.keepAwake(true);
-    photos = await listPhotos().catch(() => []);
+    let failed = false;
+    photos = await listPhotos().catch(() => {
+      failed = true;
+      return [];
+    });
     if (my !== token) return;
     if (!photos.length) {
-      showEmpty();
+      showEmpty(failed);
       return;
     }
     empty.hidden = true;

@@ -15,16 +15,21 @@ export const VOICE_KIND = 'voicevox';
 export const LETTER_KIND = 'snow-letter';
 const LEGACY_FROM = 'みんなより';
 
+// ロウソクの消えやすさの初期値の版。これより前に保存された「やさしい」（当時の初期値）は、今の初期値「ふつう」に置きかえる
+export const DIFFICULTY_KIND = 'normal-default';
+const LEGACY_DIFFICULTY = 'easy';
+
 export const DEFAULT_SETTINGS = Object.freeze({
   name: 'ももちゃん',
   age: 4,
   message: '', // 空なら名前と年齢から自動で作る（雪の女王からの手紙）
   from: 'エルサより ❄️',
-  difficulty: 'easy',
+  difficulty: 'normal',
   sound: true,
   voice: true,
   voiceKind: VOICE_KIND,
   letterKind: LETTER_KIND,
+  difficultyKind: DIFFICULTY_KIND,
 });
 
 export function sanitizeSettings(raw) {
@@ -41,7 +46,9 @@ export function sanitizeSettings(raw) {
     const from = raw.from.trim().slice(0, FROM_MAX);
     if (raw.letterKind === LETTER_KIND || from !== LEGACY_FROM) s.from = from;
   }
-  if (DIFFICULTIES.includes(raw.difficulty)) s.difficulty = raw.difficulty;
+  if (DIFFICULTIES.includes(raw.difficulty) && (raw.difficultyKind === DIFFICULTY_KIND || raw.difficulty !== LEGACY_DIFFICULTY)) {
+    s.difficulty = raw.difficulty;
+  }
   if (typeof raw.sound === 'boolean') s.sound = raw.sound;
   if (typeof raw.voice === 'boolean' && raw.voiceKind === VOICE_KIND) s.voice = raw.voice;
   return s;

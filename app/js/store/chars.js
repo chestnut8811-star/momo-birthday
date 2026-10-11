@@ -2,7 +2,7 @@
 // （差し替えた画像は IndexedDB に保存し、公開サイトには置かない）
 
 import { txn, request, finished } from './db.js';
-import { hasTransparency, removeBackground, alphaBounds } from '../logic/image.js';
+import { cutoutBackground, alphaBounds } from '../logic/image.js';
 
 const STORE = 'chars';
 const MAX_SIDE = 1200;
@@ -24,12 +24,14 @@ export function charBlob(rec) {
   return new Blob([rec.data], { type: rec.type || 'image/png' });
 }
 
+// 戻り値は背景をどうしたか（cutoutBackground の戻り値）
 export async function setCustomChar(slot, file) {
   const r = await prepareCharImage(file);
   const data = await r.blob.arrayBuffer();
   const tx = await txn(STORE, 'readwrite');
   tx.objectStore(STORE).put({ slot, data, type: 'image/png', w: r.w, h: r.h, updatedAt: Date.now() });
-  return finished(tx);
+  await finished(tx);
+  return r.mode;
 }
 
 export async function deleteCustomChar(slot) {
@@ -53,7 +55,7 @@ function loadImage(url) {
   });
 }
 
-// 透明な背景の PNG はそのまま、白い背景などは縁から消す。まわりの余白を詰めて PNG にする
+// 透明な背景の PNG はそのまま、まわりが一色の背景（白など）は縁から消す。写真はそのまま。まわりの余白を詰めて PNG にする
 export async function prepareCharImage(file) {
   const url = URL.createObjectURL(file);
   try {
@@ -68,8 +70,8 @@ export async function prepareCharImage(file) {
     g.imageSmoothingQuality = 'high';
     g.drawImage(img, 0, 0, w, h);
     const pixels = g.getImageData(0, 0, w, h);
-    if (!hasTransparency(pixels)) removeBackground(pixels);
-    g.putImageData(pixels, 0, 0);
+    const mode = cutoutBackground(pixels);
+    if (mode === 'removed') g.putImageData(pixels, 0, 0);
     const box = alphaBounds(pixels);
     const pad = Math.round(Math.max(box.w, box.h) * 0.02);
     const x0 = Math.max(0, box.x - pad);
@@ -84,7 +86,7 @@ export async function prepareCharImage(file) {
       out.toBlob((b) => (b ? resolve(b) : reject(new Error('encode-failed'))), 'image/png'),
     );
     c.width = c.height = out.width = out.height = 0; // iOS のキャンバス用メモリをすぐ返す
-    return { blob, w: cw, h: ch };
+    return { blob, w: cw, h: ch, mode };
   } finally {
     URL.revokeObjectURL(url);
   }
